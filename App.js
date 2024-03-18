@@ -4,7 +4,7 @@ import React from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
-
+// test
 export default function App() {
   return (
     <View style={styles.container}>
