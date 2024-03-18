@@ -9,18 +9,18 @@ export default function App() {
   return (
     <View style={styles.container}>
       <View style={styles.loginContainer}>
-        <Text style={styles.loginText}>Login</Text>
+        <Text style={styles.loginText}>User Login</Text>
         <StatusBar style="auto" />
         <TextInput
           style={styles.input}
           placeholder="Username"
-          placeholderTextColor="#aaa"
+          placeholderTextColor="#aa1"
         />
         <TextInput
           style={styles.input}
           placeholder="Password"
-          placeholderTextColor="#aaa"
-          secureTextEntry={true}
+          placeholderTextColor="#aa1"
+          secureTextEntry={true} // Hides the text entered while its being entered
         />
         <TouchableOpacity style={styles.loginButton}>
           <Text style={styles.buttonText}>Login</Text>
@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
   loginContainer: {
     backgroundColor: '#333', 
     padding: 20,
-    borderRadius: 10,
+    borderRadius: 30,
     width: '80%',
   },
   loginText: {
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: '#444',
-    borderRadius: 5,
+    borderRadius: 10,
     padding: 10,
     marginBottom: 10,
     color: '#fff',
@@ -59,12 +59,12 @@ const styles = StyleSheet.create({
   loginButton: {
     backgroundColor: '#1e90ff',
     padding: 10,
-    borderRadius: 5,
+    borderRadius: 10,
     marginTop: 10,
   },
   buttonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     textAlign: 'center',
   },
 });
