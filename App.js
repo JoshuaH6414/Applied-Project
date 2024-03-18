@@ -14,12 +14,12 @@ export default function App() {
         <TextInput
           style={styles.input}
           placeholder="Username"
-          placeholderTextColor="#aaa"
+          placeholderTextColor="#aa1"
         />
         <TextInput
           style={styles.input}
           placeholder="Password"
-          placeholderTextColor="#aaa"
+          placeholderTextColor="#aa1"
           secureTextEntry={true}
         />
         <TouchableOpacity style={styles.loginButton}>
