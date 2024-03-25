@@ -28,12 +28,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: '#ccc',
-    paddingVertical: 10,
+    backgroundColor: 'black',
+    paddingVertical: 50,
   },
   tabItem: {
     flex: 1,
-    alignItems: 'bottom',
+    alignItems: 'center',
   },
 });
 
