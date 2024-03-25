@@ -80,6 +80,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   image: {
     position: 'absolute',
     top: 0,
@@ -87,22 +88,26 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.7)', 
+    backgroundColor: 'rgba(0,0,0,1)', 
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   formContainer: {
     width: '80%',
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   title: {
     fontSize: 24,
     marginBottom: 20,
     color: '#fff',
   },
+
   input: {
     width: '100%',
     height: 40,
@@ -113,6 +118,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: '#fff',
   },
+  
 });
 
 export default SignupScreen;
+
