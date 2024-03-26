@@ -7,6 +7,8 @@ import homeIcon from './assets/BottomBar/Home.png';
 import bookmarksIcon from './assets/BottomBar/Bookmark.png';
 import userAccountIcon from './assets/BottomBar/User.png';
 
+
+//test
 import LoginSignupScreen from './screens/LoginSignupScreen';
 import HomeScreen from './screens/HomeScreen';
 import MovieDetailsScreen from './screens/MovieDetailsScreen';
