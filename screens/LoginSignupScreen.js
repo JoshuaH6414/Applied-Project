@@ -1,7 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Image, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
 const LoginScreen = ({ navigation }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleSignUp = () => {
+    const auth = getAuth();
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        // Handle successful sign-up
+        const user = userCredential.user;
+        console.log('User signed up with email:', user.email);
+      })
+      .catch((error) => {
+        // Handle sign-up error
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.error('Sign-up error:', errorMessage, ", error code: ", errorCode);
+      });
+  };
+
+  const handleSignIn = () => {
+    const auth = getAuth();
+    signInWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+        // Signed in 
+        const user = userCredential.user;
+        // ...
+    })
+    .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.error('Sign-in error:', errorMessage, ", error code: ", errorCode)
+    });
+  }
+
   return (
     <View style={styles.container}>
       <Image 
@@ -18,17 +53,21 @@ const LoginScreen = ({ navigation }) => {
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
+            value={email}
+            onChangeText={setEmail}
           />
           <TextInput
             style={[styles.input, styles.inputText]}
             placeholder="Password"
             placeholderTextColor="#000"
             secureTextEntry
+            value={password}
+            onChangeText={setPassword}
           />
-          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Home')}>
+          <TouchableOpacity style={styles.button} onPress={handleSignIn}>
             <Text style={styles.buttonText}>Login</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('SignUp')}>
+          <TouchableOpacity style={styles.button} onPress={handleSignUp}>
             <Text style={styles.buttonText}>Signup</Text>
           </TouchableOpacity>
         </View>
