@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Image } from 'react-native';
+import background from '../assets/background/bc2.jpg';
 
 const SignupScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -33,7 +34,7 @@ const SignupScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Image 
         style={styles.image}
-        source={{uri: 'https://images.unsplash.com/photo-1616530940355-351fabd9524b?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'}}
+        source={background}
       />
       <View style={styles.overlay}>
         <View style={styles.formContainer}>
@@ -66,7 +67,7 @@ const SignupScreen = ({ navigation }) => {
           <Button
             title="Back to Login"
             onPress={() => navigation.goBack()}
-            color="#808080"
+            color="#1a9"
           />
         </View>
       </View>
