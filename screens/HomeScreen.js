@@ -1,6 +1,7 @@
-import { StyleSheet, Button, Text, View, TouchableOpacity } from 'react-native';
-import React, { useState } from 'react';
-import { auth } from '../firebaseConfig'; // Import Firebase auth
+import { StyleSheet, Button, Text, View, TouchableOpacity, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { auth, db } from '../firebaseConfig.js'; // Import Firebase auth, db
+import { collection, getDocs } from '@firebase/firestore';
 
 const HomeScreen = ({ navigation }) => {
   const [likedContent] = useState(null);
@@ -16,6 +17,27 @@ const HomeScreen = ({ navigation }) => {
         });
   };
 
+  const [movies, setMovies] = useState([]);
+
+  useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "movies")); // Get movies collection from Firestore
+        const moviesData = [];
+        querySnapshot.forEach((doc) => {
+          moviesData.push(doc.data());
+        });
+        setMovies(moviesData);
+        console.log(moviesData);
+      } catch (error) {
+        console.error('Error fetching movies:', error);
+      }
+    };
+    
+
+    fetchMovies();
+  }, []);
+
 
   return (
     <View>
@@ -23,6 +45,17 @@ const HomeScreen = ({ navigation }) => {
       <TouchableOpacity onPress={handleSignOut} style={styles.button}>
         <Text style={styles.buttonText}>Sign Out</Text>
       </TouchableOpacity>
+      <FlatList
+        data={movies}
+        renderItem={({ item }) => (
+          <View>
+            <Text>{item.title}</Text>
+            <Text>{item.description}</Text>
+            {/* Add more movie details as needed */}
+          </View>
+        )}
+        keyExtractor={(item) => item.id}
+      />
       <Button title="Go to Movie Details" onPress={() => navigation.navigate('MovieDetails')} />
       <Button title="Like" onPress={() => navigation.navigate('BookmarksScreen')} />
     </View>
