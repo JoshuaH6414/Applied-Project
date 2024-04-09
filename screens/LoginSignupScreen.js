@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Image, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import background from '../assets/background/bc2.jpg';
+import logo from '../assets/background/logo-no-background.png'
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
 const LoginScreen = ({ navigation }) => {
@@ -40,14 +42,20 @@ const LoginScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Image 
-        style={styles.image}
-        source={{uri: 'https://images.unsplash.com/photo-1616530940355-351fabd9524b?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'}}
+        style={[styles.image, styles.backgroundImage]}
+        source={background}
       />
-      <View style={styles.overlay}>
+      <View style={[styles.overlay]}>
+        <View style={styles.logoContainer}>
+          <Image 
+            style={styles.logo}
+            source={logo}
+          />
+        </View>
         <View style={styles.formContainer}>
-          <Text style={styles.title}>FlixTok</Text>
+          <Text style={styles.title}></Text>
           <TextInput
-            style={[styles.input, styles.inputText]}
+            style={styles.input}
             placeholder="Email"
             placeholderTextColor="#000"
             keyboardType="email-address"
@@ -57,7 +65,7 @@ const LoginScreen = ({ navigation }) => {
             onChangeText={setEmail}
           />
           <TextInput
-            style={[styles.input, styles.inputText]}
+            style={styles.input}
             placeholder="Password"
             placeholderTextColor="#000"
             secureTextEntry
@@ -76,12 +84,23 @@ const LoginScreen = ({ navigation }) => {
   );
 };
 
+const buttonStyles = {
+  backgroundColor: '#007bff',
+  width: 100,
+  borderRadius: 10,
+  paddingVertical: 6,
+  paddingHorizontal: 10,
+  marginTop: 15,
+  marginBottom: 1,
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',  
   },
+
   image: {
     position: 'absolute',
     top: 0,
@@ -89,24 +108,43 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+
+  backgroundImage: {
+    resizeMode: 'cover',
+  },
+
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.8)', 
     justifyContent: 'center',
-    alignItems: 'center',
-    
+    alignItems: 'center',   
   },
+
+  logoContainer: {
+    position: 'absolute',
+    top: '15%',
+    alignItems: 'center',
+  },
+
+  logo: {
+    width: 200,
+    height: 200,
+    resizeMode: 'contain',
+  },
+
   formContainer: {
     width: '80%',
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   title: {
     fontSize: 44,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 20,
   },
+
   input: {
     width: '100%',
     height: 40,
@@ -115,26 +153,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#cccccc',
     borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
   },
-  inputText: {
-    color: '#000',
-  },
-  button: {
-    backgroundColor: '#007bff',
-    width: 100,
-    borderRadius: 10,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    marginTop: 15,
-    marginBottom: 1,
-  },
+
+  button: buttonStyles,
+
   buttonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
   },
+
 });
 
 export default LoginScreen;

@@ -22,12 +22,7 @@ const Tab = createBottomTabNavigator();
 
 const HomeTabs = () => {
   return (
-    <Tab.Navigator // Check this area to change the background colour to black
-      tabBarOptions= {{
-        style: {
-          backgroundColor: "black"
-        },
-      }}>
+    <Tab.Navigator>
       <Tab.Screen 
         name="Home" 
         component={HomeScreen} 
@@ -41,6 +36,7 @@ const HomeTabs = () => {
           ),
         }}
       />
+
       <Tab.Screen 
         name="Bookmarks" 
         component={BookmarksScreen} 
@@ -54,6 +50,7 @@ const HomeTabs = () => {
           ),
         }}
       />
+
       <Tab.Screen 
         name="UserAccount" 
         component={UserAccountScreen} 
