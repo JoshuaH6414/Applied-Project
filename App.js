@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Image } from 'react-native';
+import { auth } from './firebaseConfig'; // Import Firebase initialization
 import homeIcon from './assets/BottomBar/Home.png';
 import bookmarksIcon from './assets/BottomBar/Bookmark.png';
 import userAccountIcon from './assets/BottomBar/User.png';
@@ -68,6 +69,16 @@ const HomeTabs = () => {
 };
 
 const App = () => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUser(user);
+    });
+
+    return unsubscribe; // Cleanup function to unsubscribe from the auth state observer
+  }, []);
+
   return (
     <NavigationContainer>
       <Stack.Navigator 
@@ -77,10 +88,11 @@ const App = () => {
           headerStyle: { backgroundColor: "black"},
           headerTitleStyle: {fontWeight: "bold"},
         }}>
-        <Stack.Screen name="LoginSignup" component={LoginSignupScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Home" component={HomeTabs} options={{ title: 'FlixTok', headerShown: false }} />
-        <Stack.Screen name="MovieDetails" component={MovieDetailsScreen} options={{ title: 'Movie Details' }} />
-        <Stack.Screen name="SignUp" component={SignUpScreen} options={{ title: 'Sign Up' }} />
+          {user ? (
+          <Stack.Screen name="HomeScreen" component={HomeTabs} options={{ title: 'FlixTok', headerShown: false }} />
+        ) : (
+          <Stack.Screen name="LoginSignup" component={LoginSignupScreen} options={{ headerShown: false }} />
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

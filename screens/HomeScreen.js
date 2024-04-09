@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, StyleSheet, Animated, PanResponder, Image } from 'react-native';
+import { View, Text, Button, StyleSheet, Animated, PanResponder, Image, FlatList } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
+import { auth, db } from '../firebaseConfig.js'; // Import Firebase auth, db
+import { collection, getDocs } from '@firebase/firestore';
+
 
 const HomeScreen = ({ navigation }) => {
   const [likedContent, setLikedContent] = useState(null);
@@ -85,76 +88,82 @@ const HomeScreen = ({ navigation }) => {
     })
   ).current;
 
+  const handleSignOut = () => {
+    auth.signOut()
+        .then(() => {
+            console.log('User signed out successfully');
+            // Perform any additional actions after sign-out if needed
+        })
+        .catch((error) => {
+            console.error('Error signing out:', error);
+        });
+  };
+
+  const [movies, setMovies] = useState([]);
+
+  useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "movies")); // Get movies collection from Firestore
+        const moviesData = [];
+        querySnapshot.forEach((doc) => {
+          moviesData.push(doc.data());
+        });
+        setMovies(moviesData);
+        console.log(moviesData);
+      } catch (error) {
+        console.error('Error fetching movies:', error);
+      }
+    };
+    
+
+    fetchMovies();
+  }, []);
+
+
   return (
-    <View style={styles.container}>
-      <Animated.View
-        style={[
-          styles.card,
-          {
-            transform: [{ translateX: pan.x }, { translateY: pan.y }],
-          },
-        ]}
-        {...panResponder.panHandlers}>
-        <Text>{randomMovie ? randomMovie.title : 'Loading...'}</Text>
-        <Text>{randomMovie ? randomMovie.description : 'Loading...'}</Text>
-      </Animated.View>
-      <View style={styles.swipeTextContainer}>
-        <Image source={require('../assets/homePage/CrossDislike.png')} style={styles.swipeIcon} />
-        <Image source={require('../assets/homePage/Heart.png')} style={styles.swipeIcon} />
-      </View>
-      <Animated.Image
-        source={require('../assets/homePage/Heart.png')}
-        style={[styles.icon, { opacity: heartOpacity }]}
+    <View>
+      <Text>{likedContent}</Text>
+      <TouchableOpacity onPress={handleSignOut} style={styles.button}>
+        <Text style={styles.buttonText}>Sign Out</Text>
+      </TouchableOpacity>
+      <FlatList
+        data={movies}
+        renderItem={({ item }) => (
+          <View>
+            <Text>{item.title}</Text>
+            <Text>{item.description}</Text>
+            {/* Add more movie details as needed */}
+          </View>
+        )}
+        keyExtractor={(item) => item.id}
       />
-      <Animated.Image
-        source={require('../assets/homePage/CrossDislike.png')}
-        style={[styles.icon, { opacity: thumbsDownOpacity }]}
-      />
+      <Button title="Go to Movie Details" onPress={() => navigation.navigate('MovieDetails')} />
+      <Button title="Like" onPress={() => navigation.navigate('BookmarksScreen')} />
     </View>
   );
-};
+  
+}
+
+export default HomeScreen;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
   },
-  card: {
-    width: 300,
-    height: 400,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    elevation: 5,
+  button: {
+      backgroundColor: '#007bff',
+      padding: 10,
+      borderRadius: 5,
+      width: '48%', // Adjust button width as needed
+      marginTop: 20, // Add margin to separate from other elements
   },
-  swipeTextContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    position: 'absolute',
-    bottom: 20,
-    left: 0,
-    right: 0,
-  },
-  swipeIcon: {
-    width: 40,
-    height: 40,
-  },
-  icon: {
-    position: 'absolute',
-    width: 100,
-    height: 100,
-    resizeMode: 'contain',
-    zIndex: 1,
-    top: '15%',
+  buttonText: {
+      color: '#fff',
+      textAlign: 'center',
   },
 });
 
 export default HomeScreen;
-
-
-
-
