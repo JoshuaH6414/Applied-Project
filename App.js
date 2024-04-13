@@ -22,16 +22,22 @@ const Tab = createBottomTabNavigator();
 
 const HomeTabs = () => {
   return (
-    <Tab.Navigator>
+    <Tab.Navigator
+      screenOptions={{
+        tabBarStyle: {backgroundColor: 'black'}, 
+        tabBarActiveTintColor:'black',
+        tabBarInactiveTintColor: 'white',
+
+      }}>
       <Tab.Screen 
         name="Home" 
         component={HomeScreen} 
         options={{
-          tabBarLabel: 'Home',
+          tabBarLabel: '',
           tabBarIcon: ({ focused }) => (
             <Image
               source={homeIcon}
-              style={{ width: 24, height: 24, tintColor: focused ? 'black' : 'gray' }}
+              style={{ width: 28, height: 28, tintColor: focused ? 'white' : 'gray' }}
             />
           ),
         }}
@@ -41,11 +47,11 @@ const HomeTabs = () => {
         name="Bookmarks" 
         component={BookmarksScreen} 
         options={{
-          tabBarLabel: 'Bookmarks',
+          tabBarLabel: '',
           tabBarIcon: ({ focused }) => (
             <Image
               source={bookmarksIcon}
-              style={{ width: 24, height: 24, tintColor: focused ? 'black' : 'gray' }}
+              style={{ width: 28, height: 28, tintColor: focused ? 'white' : 'gray' }}
             />
           ),
         }}
@@ -55,11 +61,11 @@ const HomeTabs = () => {
         name="UserAccount" 
         component={UserAccountScreen} 
         options={{
-          tabBarLabel: 'User Account',
+          tabBarLabel: '',
           tabBarIcon: ({ focused }) => (
             <Image
               source={userAccountIcon}
-              style={{ width: 24, height: 24, tintColor: focused ? 'black' : 'gray' }}
+              style={{ width: 28, height: 28, tintColor: focused ? 'white' : 'gray' }}
             />
           ),
         }}
