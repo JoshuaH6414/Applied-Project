@@ -3,6 +3,9 @@ import { Image, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'reac
 import background from '../assets/background/bc2.jpg';
 import logo from '../assets/background/logo-no-background.png'
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -30,13 +33,34 @@ const LoginScreen = ({ navigation }) => {
     .then((userCredential) => {
         // Signed in 
         const user = userCredential.user;
-        // ...
+        // Create a guest session for the user
+        createGuestSession();
     })
     .catch((error) => {
         const errorCode = error.code;
         const errorMessage = error.message;
         console.error('Sign-in error:', errorMessage, ", error code: ", errorCode)
     });
+  }
+
+  const createGuestSession = async () => {
+    try {
+      const response = await axios.get('https://api.themoviedb.org/3/authentication/guest_session/new', {
+        headers: {
+          'Accept': 'application/json',
+          // Add your API key as a bearer token
+          'Authorization' : 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1MmZmNTQzMDJkM2VjMTEwMjk3YWRmMjIwZjVlODM2OSIsInN1YiI6IjY2MDAxOWU2MjI2YzU2MDEzMTZlZmMzZSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.QDEM9Uw5n7Es4I_v-3527_7fwTA8QaJflisMVeYNm9g',
+         'Host': 'api.themoviedb.org',
+        }
+      });
+
+      const guestSessionId = response.data.guest_session_id;
+      // Store the guest session ID locally
+      await AsyncStorage.setItem('guestSessionId', guestSessionId);
+      console.log('Guest session created:', guestSessionId);
+    } catch (error) {
+      console.error('Error creating guest session:', error);
+    }
   }
 
   return (
