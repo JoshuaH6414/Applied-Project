@@ -92,6 +92,7 @@ const App = () => {
           <Stack.Screen name="HomeScreen" component={HomeTabs} options={{ title: 'FlixTok', headerShown: false }} />
         ) : (
           <Stack.Screen name="LoginSignup" component={LoginSignupScreen} options={{ headerShown: false }} />
+
         )}
       </Stack.Navigator>
     </NavigationContainer>
