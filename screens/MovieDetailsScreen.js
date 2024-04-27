@@ -14,3 +14,4 @@ const MovieDetailsScreen = ({ navigation }) => {
 }
 
 export default MovieDetailsScreen;
+ 
