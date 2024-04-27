@@ -98,7 +98,7 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{randomMovie ? randomMovie.title : 'Swipe Right to like'}</Text>
+      <Text style={styles.title}>{randomMovie ? randomMovie.title : 'Swipe to begin'}</Text>
       <Animated.View
         style={[
           styles.card,
