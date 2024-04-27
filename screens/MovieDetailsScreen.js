@@ -34,6 +34,17 @@ const MovieDetailsScreen = ({ navigation, route }) => {
           <Text style={styles.label}>Release:</Text>
           <Text style={styles.text}>{movie.releaseDate}</Text>
         </View>
+        <View style={styles.detailsBox}>
+          <Text style={styles.label}>Reviews:</Text>
+          {movie.reviews.map(review => (
+            <View key={review.reviewDate} style={styles.reviewContainer}>
+              <Text style={styles.reviewDate}>{review.reviewDate}</Text>
+              <Text style={styles.reviewContent}>{review.content}</Text>
+              <Text style={styles.reviewAuthor}>By: {review.author}</Text>
+              <Text>------------------------------------------------</Text>
+            </View>
+          ))}
+        </View>
       </ScrollView>
       <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
         <Text style={styles.buttonText}>Go back</Text>
@@ -93,8 +104,6 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     maxHeight: 400,
-    //maxWidth: 400,
-    
   },
 });
 
