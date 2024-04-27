@@ -13,7 +13,7 @@ import userAccountIcon from './assets/BottomBar/User.png';
 import LoginSignupScreen from './screens/LoginSignupScreen';
 import HomeScreen from './screens/HomeScreen';
 import MovieDetailsScreen from './screens/MovieDetailsScreen';
-import BookmarksScreen from './screens/BookmarksScreen';
+import BookmarksScreen from './components/BookmarksScreenComponent';
 import UserAccountScreen from './screens/UserAccountScreen';
 import SignUpScreen from './screens/SignUpScreen';
 
@@ -33,6 +33,7 @@ const HomeTabs = () => {
         name="Home" 
         component={HomeScreen} 
         options={{
+          headerShown: false,
           tabBarLabel: '',
           tabBarIcon: ({ focused }) => (
             <Image
@@ -47,6 +48,7 @@ const HomeTabs = () => {
         name="Bookmarks" 
         component={BookmarksScreen} 
         options={{
+          headerShown: false,
           tabBarLabel: '',
           tabBarIcon: ({ focused }) => (
             <Image
@@ -61,6 +63,7 @@ const HomeTabs = () => {
         name="UserAccount" 
         component={UserAccountScreen} 
         options={{
+          headerShown: false,
           tabBarLabel: '',
           tabBarIcon: ({ focused }) => (
             <Image
@@ -95,10 +98,13 @@ const App = () => {
           headerTitleStyle: {fontWeight: "bold"},
         }}>
           {user ? (
-          <Stack.Screen name="HomeScreen" component={HomeTabs} options={{ title: 'FlixTok', headerShown: false }} />
+            <>
+              <Stack.Screen name="HomeScreen" component={HomeTabs} options={{ title: 'FlixTok', headerShown: false }} />
+              <Stack.Screen name="MovieDetailsScreen"  component={MovieDetailsScreen} options={{ title: 'Movie Details', headerShown: false}} />
+            </>
+
         ) : (
           <Stack.Screen name="LoginSignup" component={LoginSignupScreen} options={{ headerShown: false }} />
-
         )}
       </Stack.Navigator>
     </NavigationContainer>
