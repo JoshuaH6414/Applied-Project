@@ -1,15 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, PanResponder, Image } from 'react-native';
+import { View, Text, StyleSheet, Animated, PanResponder, Image, TouchableOpacity } from 'react-native';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebaseConfig'; // Import your Firebase configuration
+import { db } from '../firebaseConfig';
+import { saveLikedMovie } from '../utils/saveLikedMovie'; 
+import { auth } from '../firebaseConfig';
+import { useNavigation } from '@react-navigation/native';
+
 
 const HomeScreen = () => {
   const [randomMovie, setRandomMovie] = useState(null);
   const pan = React.useRef(new Animated.ValueXY()).current;
   const heartOpacity = React.useRef(new Animated.Value(0)).current;
   const thumbsDownOpacity = React.useRef(new Animated.Value(0)).current;
+  const navigation = useNavigation();
 
-  // Function to generate random movie
+  
+
+  // Get the current user
+  const currentUser = auth.currentUser;
+  const userId = currentUser ? currentUser.uid : null;
+
   const generateRandomMovie = (moviesData) => {
     if (!moviesData || moviesData.length === 0) {
       return null;
@@ -18,43 +28,41 @@ const HomeScreen = () => {
     return moviesData[randomIndex];
   };
 
-  // Function to handle swipe release
-  const handlePanResponderRelease = (_, gesture) => {
-    if (gesture.dx > 120) {
-      // Swiped right, liked
-      Animated.timing(heartOpacity, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }).start(() => {
+  const handlePanResponderRelease = async (_, gesture) => {
+    const Threshold = 150;
+    const velocity = Math.sqrt(gesture.vx ** 2 + gesture.vy ** 2);
+    
+    if (gesture.dx > Threshold || gesture.dx < -Threshold || velocity > 1) {
+      if (gesture.dx > 120) {
         Animated.timing(heartOpacity, {
-          toValue: 0,
-          duration: 0,
+          toValue: 1,
+          duration: 500,
           useNativeDriver: true,
-        }).start();
-      });
-    } else if (gesture.dx < -120) {
-      // Swiped left, disliked
-      Animated.timing(thumbsDownOpacity, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }).start(() => {
+        }).start(() => {
+          Animated.timing(heartOpacity, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: true,
+          }).start();
+        });
+        // Save liked movie
+        if (randomMovie && userId) {
+          saveLikedMovie(userId, randomMovie);
+        }
+      } else if (gesture.dx < -120) {
         Animated.timing(thumbsDownOpacity, {
-          toValue: 0,
-          duration: 0,
+          toValue: 1,
+          duration: 500,
           useNativeDriver: true,
-        }).start();
-      });
-    }
-    Animated.spring(pan, {
-      toValue: { x: 0, y: 0 },
-      useNativeDriver: false,
-    }).start();
-  };
+        }).start(() => {
+          Animated.timing(thumbsDownOpacity, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: true,
+          }).start();
+        });
+      }
 
-  useEffect(() => {
-    const fetchMovies = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'movies'));
         const moviesData = [];
@@ -65,10 +73,15 @@ const HomeScreen = () => {
       } catch (error) {
         console.error('Error fetching movies:', error);
       }
-    };
-
-    fetchMovies();
-  }, []);
+    }
+  
+    Animated.spring(pan, {
+      toValue: { x: 0, y: 0 },
+      useNativeDriver: false,
+      tension: 100,
+      friction: 10,
+    }).start();
+  };
 
   const panResponder = React.useRef(
     PanResponder.create({
@@ -79,6 +92,11 @@ const HomeScreen = () => {
       onPanResponderRelease: handlePanResponderRelease,
     })
   ).current;
+
+  // Function to navigate to MovieDetailsScreen
+  const goToMovieDetails = () => {
+    navigation.navigate('MovieDetailsScreen');
+  };
 
   return (
     <View style={styles.container}>
@@ -105,6 +123,11 @@ const HomeScreen = () => {
         source={require('../assets/homePage/CrossDislike.png')}
         style={[styles.icon, { opacity: thumbsDownOpacity }]}
       />
+      
+      {/* Button to navigate to MovieDetailsScreen */}
+      <TouchableOpacity style={styles.button} onPress={goToMovieDetails}>
+        <Text style={styles.buttonText}>Movie Details</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -115,9 +138,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'black',
-    
-    
   },
+
   card: {
     width: 300,
     height: 400,
@@ -129,6 +151,7 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     elevation: 5,
   },
+
   swipeTextContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -137,10 +160,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
+
   swipeIcon: {
     width: 40,
     height: 40,
   },
+
   icon: {
     position: 'absolute',
     width: 100,
@@ -149,6 +174,19 @@ const styles = StyleSheet.create({
     zIndex: 1,
     top: '20%',
   },
+
+  button: {
+    backgroundColor: 'white',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 20,
+    
+  },
+  
+  buttonText: {
+    color: 'black',
+    fontWeight: 'bold',
+  },
 });
 
- export default HomeScreen;
+export default HomeScreen;
