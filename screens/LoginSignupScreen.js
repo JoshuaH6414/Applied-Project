@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Image, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import background from '../assets/background/bc2.jpg';
 import logo from '../assets/background/logo-no-background.png'
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import axios from 'axios';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -27,12 +26,15 @@ const LoginScreen = ({ navigation }) => {
       });
   };
 
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     const auth = getAuth();
     signInWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
         // Signed in 
         const user = userCredential.user;
+        const userId = user.uid;
+        // Save the user ID to AsyncStorage
+        AsyncStorage.setItem('userId', userId);
         // Create a guest session for the user
         createGuestSession();
     })
