@@ -6,24 +6,37 @@ import { saveLikedMovie } from '../utils/saveLikedMovie';
 import { auth } from '../firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
 
-
 const HomeScreen = () => {
-  const [randomMovie, setRandomMovie] = useState(null);
-  const pan = React.useRef(new Animated.ValueXY()).current;
-  const heartOpacity = React.useRef(new Animated.Value(0)).current;
-  const thumbsDownOpacity = React.useRef(new Animated.Value(0)).current;
+  const [movies, setMovies] = useState([]);
+  const [currentMovieIndex, setCurrentMovieIndex] = useState(0);
+  const [pan] = useState(new Animated.ValueXY());
+  const [heartOpacity] = useState(new Animated.Value(0));
+  const [thumbsDownOpacity] = useState(new Animated.Value(0));
   const navigation = useNavigation();
 
   // Get the current user
   const currentUser = auth.currentUser;
   const userId = currentUser ? currentUser.uid : null;
 
-  const generateRandomMovie = (moviesData) => {
-    if (!moviesData || moviesData.length === 0) {
+  useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'movies'));
+        const moviesData = querySnapshot.docs.map(doc => doc.data());
+        setMovies(moviesData);
+      } catch (error) {
+        console.error('Error fetching movies:', error);
+      }
+    };
+    fetchMovies();
+  }, []);
+
+  const generateRandomMovie = () => {
+    if (movies.length === 0) {
       return null;
     }
-    const randomIndex = Math.floor(Math.random() * moviesData.length);
-    return moviesData[randomIndex];
+    const randomIndex = Math.floor(Math.random() * movies.length);
+    return movies[randomIndex];
   };
 
   const handlePanResponderRelease = async (_, gesture) => {
@@ -44,8 +57,13 @@ const HomeScreen = () => {
           }).start();
         });
         // Save liked movie
-        if (randomMovie && userId) {
-          saveLikedMovie(userId, randomMovie);
+        const currentMovie = movies[currentMovieIndex];
+        if (currentMovie && userId) {
+          try {
+            await saveLikedMovie(userId, currentMovie);
+          } catch (error) {
+            console.log('Error saving liked movie:', error);
+          }
         }
       } else if (gesture.dx < -120) {
         Animated.timing(thumbsDownOpacity, {
@@ -61,16 +79,7 @@ const HomeScreen = () => {
         });
       }
 
-      try {
-        const querySnapshot = await getDocs(collection(db, 'movies'));
-        const moviesData = [];
-        querySnapshot.forEach((doc) => {
-          moviesData.push(doc.data());
-        });
-        setRandomMovie(generateRandomMovie(moviesData));
-      } catch (error) {
-        console.error('Error fetching movies:', error);
-      }
+      setCurrentMovieIndex(currentMovieIndex + 1);
     }
   
     Animated.spring(pan, {
@@ -93,12 +102,13 @@ const HomeScreen = () => {
 
   // Function to navigate to MovieDetailsScreen
   const goToMovieDetails = () => {
-    navigation.navigate('MovieDetailsScreen', { movie : randomMovie});
+    const currentMovie = movies[currentMovieIndex];
+    navigation.navigate('MovieDetailsScreen', { movie: currentMovie });
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{randomMovie ? randomMovie.title : 'Swipe to begin'}</Text>
+      <Text style={styles.title}>{movies.length > 0 ? movies[currentMovieIndex].title : 'Swipe to begin'}</Text>
       <Animated.View
         style={[
           styles.card,
@@ -107,9 +117,9 @@ const HomeScreen = () => {
           },
         ]}
         {...panResponder.panHandlers}>
-        <Text>{randomMovie ? randomMovie.description : 'Swipe Left to dislike'}</Text>
-        {randomMovie && randomMovie.poster && (
-          <Image source={{ uri: randomMovie.poster }} style={styles.movieImage} />
+        <Text>{movies.length > 0 ? movies[currentMovieIndex].description : 'Swipe Left to dislike'}</Text>
+        {movies.length > 0 && movies[currentMovieIndex].poster && (
+          <Image source={{ uri: movies[currentMovieIndex].poster }} style={styles.movieImage} />
         )}
       </Animated.View>
       <View style={styles.swipeTextContainer}>
