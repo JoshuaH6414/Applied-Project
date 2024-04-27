@@ -14,8 +14,6 @@ const HomeScreen = () => {
   const thumbsDownOpacity = React.useRef(new Animated.Value(0)).current;
   const navigation = useNavigation();
 
-  
-
   // Get the current user
   const currentUser = auth.currentUser;
   const userId = currentUser ? currentUser.uid : null;
@@ -95,11 +93,12 @@ const HomeScreen = () => {
 
   // Function to navigate to MovieDetailsScreen
   const goToMovieDetails = () => {
-    navigation.navigate('MovieDetailsScreen');
+    navigation.navigate('MovieDetailsScreen', { movie : randomMovie});
   };
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>{randomMovie ? randomMovie.title : 'Swipe Right to like'}</Text>
       <Animated.View
         style={[
           styles.card,
@@ -108,8 +107,10 @@ const HomeScreen = () => {
           },
         ]}
         {...panResponder.panHandlers}>
-        <Text>{randomMovie ? randomMovie.title : 'Loading...'}</Text>
-        <Text>{randomMovie ? randomMovie.description : 'Loading...'}</Text>
+        <Text>{randomMovie ? randomMovie.description : 'Swipe Left to dislike'}</Text>
+        {randomMovie && randomMovie.poster && (
+          <Image source={{ uri: randomMovie.poster }} style={styles.movieImage} />
+        )}
       </Animated.View>
       <View style={styles.swipeTextContainer}>
         <Image source={require('../assets/homePage/CrossDislike.png')} style={styles.swipeIcon} />
@@ -142,12 +143,12 @@ const styles = StyleSheet.create({
 
   card: {
     width: 300,
-    height: 400,
-    backgroundColor: 'white',
+    height: 450,
+    backgroundColor: 'black',
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
+    borderWidth: 0,
     borderColor: '#ddd',
     elevation: 5,
   },
@@ -186,6 +187,21 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'black',
     fontWeight: 'bold',
+  },
+  
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 10,
+  },
+  
+  movieImage: {
+    alignContent: "center",
+    width: '100%',
+    height: 450,
+    resizeMode: 'cover',
+    borderRadius: 10,
   },
 });
 
