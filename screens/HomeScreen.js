@@ -13,15 +13,15 @@ const HomeScreen = () => {
   const thumbsDownOpacity = React.useRef(new Animated.Value(0)).current;
   const navigation = useNavigation();
   const [movies, setMovies] = useState(null);
-  const [currentMovieIndex, setCurrentMovieIndex] = useState(null);
+  const [randomIndex, setRandomIndex] = useState(0);
   const [movieCount, setMovieCount] = useState(0);
 
-  const coll = collection(db,'movies')
   useEffect(()=> {
     const fetchMovies = async () => {
       try {
+        const coll = collection(db,'movies')
         const snapshot = await getCountFromServer(coll);
-        setMovieCount(snapshot.data().count)
+        setMovieCount(snapshot.data().count);
         console.log('count: ', movieCount);
         const randomIndex = Math.floor(Math.random() * movieCount);
         console.log('random index: ', randomIndex);
@@ -39,6 +39,12 @@ const HomeScreen = () => {
     };
     fetchMovies();
   }, []);
+  
+
+  useEffect(() => {
+    console.log('movies count:', movieCount);
+    console.log('random index:', randomIndex);
+  }, [randomIndex]);
   
   
   
@@ -91,16 +97,22 @@ const HomeScreen = () => {
         });
       }
       try {
-        console.log('movies count: ', movieCount);
-        const randomIndex = Math.floor(Math.random() * movieCount);
-        console.log('random index: ', randomIndex);
-        const movieSnapshot = await getDocs(collection(db, 'movies'));
+        const coll = collection(db, 'movies');
+      const snapshot = await getCountFromServer(coll);
+      const totalCount = snapshot.data().count;
 
-        // retrieve a random movie document
-        const randomMovie = movieSnapshot.docs[randomIndex].data();
+        if (totalCount > 0) {
+          const randomIndex = Math.floor(Math.random() * totalCount);
+          console.log('random index:', randomIndex);
 
-        // Output the random movie
-        setRandomMovie(randomMovie);
+          const movieSnapshot = await getDocs(collection(db, 'movies'));
+          const randomMovie = movieSnapshot.docs[randomIndex].data();
+
+          setMovieCount(totalCount);
+          setRandomMovie(randomMovie);
+        } else {
+          console.log('No movies found in the collection.');
+        }
       } catch (error) {
         console.error('Error fetching movie:', error);
       }
