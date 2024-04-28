@@ -13,6 +13,7 @@ const HomeScreen = () => {
   const [heartOpacity] = useState(new Animated.Value(0));
   const [thumbsDownOpacity] = useState(new Animated.Value(0));
   const navigation = useNavigation();
+  const [newIndex, setNewIndex] = useState(null);
 
   // Get the current user
   const currentUser = auth.currentUser;
@@ -22,8 +23,15 @@ const HomeScreen = () => {
     const fetchMovies = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'movies'));
-        const moviesData = querySnapshot.docs.map(doc => doc.data());
+        const moviesData = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
         setMovies(moviesData);
+        if (moviesData.length > 0) {
+          setCurrentMovieIndex(0);
+        }
+        console.log('Movies:', movies);
       } catch (error) {
         console.error('Error fetching movies:', error);
       }
@@ -31,18 +39,26 @@ const HomeScreen = () => {
     fetchMovies();
   }, []);
 
-  const generateRandomMovie = () => {
+  const generateRandomMovieIndex = () => {
     if (movies.length === 0) {
       return null;
     }
     const randomIndex = Math.floor(Math.random() * movies.length);
-    return movies[randomIndex];
+    return randomIndex;
   };
+
+  useEffect(() => {
+    if (newIndex !== null) {
+      const currentMovie = movies[newIndex];
+      console.log("current Movie: ", currentMovie);
+      // Perform any additional operations here
+    }
+  }, [newIndex, movies]);
 
   const handlePanResponderRelease = async (_, gesture) => {
     const Threshold = 150;
     const velocity = Math.sqrt(gesture.vx ** 2 + gesture.vy ** 2);
-    
+  
     if (gesture.dx > Threshold || gesture.dx < -Threshold || velocity > 1) {
       if (gesture.dx > 120) {
         Animated.timing(heartOpacity, {
@@ -58,6 +74,7 @@ const HomeScreen = () => {
         });
         // Save liked movie
         const currentMovie = movies[currentMovieIndex];
+        console.log("current Movie: ", movies[0]);
         if (currentMovie && userId) {
           try {
             await saveLikedMovie(userId, currentMovie);
@@ -78,8 +95,19 @@ const HomeScreen = () => {
           }).start();
         });
       }
-
-      setCurrentMovieIndex(currentMovieIndex + 1);
+  
+      const newIndex = generateRandomMovieIndex();
+  if (newIndex !== null) {
+    setCurrentMovieIndex(newIndex);
+    const currentMovie = movies[newIndex];
+    if (currentMovie) {
+      console.log("current Movie: ", currentMovie);
+    } else {
+      console.log("No movie found at index:", newIndex);
+    }
+  } else {
+    console.log("No movies available.", movies);
+  }
     }
   
     Animated.spring(pan, {
@@ -89,6 +117,7 @@ const HomeScreen = () => {
       friction: 10,
     }).start();
   };
+  
 
   const panResponder = React.useRef(
     PanResponder.create({
@@ -107,8 +136,11 @@ const HomeScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{movies.length > 0 ? movies[currentMovieIndex].title : 'Swipe to begin'}</Text>
+    // Inside your return statement
+<View style={styles.container}>
+  {movies.length > 0 ? (
+    <>
+      <Text style={styles.title}>{movies[currentMovieIndex].title}</Text>
       <Animated.View
         style={[
           styles.card,
@@ -117,8 +149,8 @@ const HomeScreen = () => {
           },
         ]}
         {...panResponder.panHandlers}>
-        <Text>{movies.length > 0 ? movies[currentMovieIndex].description : 'Swipe Left to dislike'}</Text>
-        {movies.length > 0 && movies[currentMovieIndex].poster && (
+        <Text>{movies[currentMovieIndex].description}</Text>
+        {movies[currentMovieIndex].poster && (
           <Image source={{ uri: movies[currentMovieIndex].poster }} style={styles.movieImage} />
         )}
       </Animated.View>
@@ -134,13 +166,18 @@ const HomeScreen = () => {
         source={require('../assets/homePage/CrossDislike.png')}
         style={[styles.icon, { opacity: thumbsDownOpacity }]}
       />
-      
       {/* Button to navigate to MovieDetailsScreen */}
       <TouchableOpacity style={styles.button} onPress={goToMovieDetails}>
         <Text style={styles.buttonText}>Movie Details</Text>
       </TouchableOpacity>
-    </View>
+    </>
+  ) : (
+    <Text style={styles.title}>Fetching movies...</Text>
+  )}
+</View>
+
   );
+  
 };
 
 const styles = StyleSheet.create({
