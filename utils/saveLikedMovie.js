@@ -6,7 +6,7 @@ const saveLikedMovie = async (userId, movieData) => {
     // Add a new document to the "likedMovies" collection
     await addDoc(collection(db, 'likedMovies'), {
       userId: userId,
-      movieData: movieData.id,
+      movieData: movieData,
     });
     console.log('Liked movie saved successfully!');
   } catch (error) {
