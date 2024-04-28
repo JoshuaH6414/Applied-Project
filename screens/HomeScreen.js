@@ -1,64 +1,65 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated, PanResponder, Image, TouchableOpacity } from 'react-native';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, limit, doc, getCountFromServer } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { saveLikedMovie } from '../utils/saveLikedMovie'; 
 import { auth } from '../firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
 
 const HomeScreen = () => {
-  const [movies, setMovies] = useState([]);
-  const [currentMovieIndex, setCurrentMovieIndex] = useState(0);
-  const [pan] = useState(new Animated.ValueXY());
-  const [heartOpacity] = useState(new Animated.Value(0));
-  const [thumbsDownOpacity] = useState(new Animated.Value(0));
+  const [randomMovie, setRandomMovie] = useState(null);
+  const pan = React.useRef(new Animated.ValueXY()).current;
+  const heartOpacity = React.useRef(new Animated.Value(0)).current;
+  const thumbsDownOpacity = React.useRef(new Animated.Value(0)).current;
   const navigation = useNavigation();
-  const [newIndex, setNewIndex] = useState(null);
+  const [movies, setMovies] = useState(null);
+  const [currentMovieIndex, setCurrentMovieIndex] = useState(null);
+  const [movieCount, setMovieCount] = useState(0);
 
-  // Get the current user
-  const currentUser = auth.currentUser;
-  const userId = currentUser ? currentUser.uid : null;
-
-  useEffect(() => {
+  const coll = collection(db,'movies')
+  useEffect(()=> {
     const fetchMovies = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'movies'));
-        const moviesData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setMovies(moviesData);
-        if (moviesData.length > 0) {
-          setCurrentMovieIndex(0);
-        }
-        console.log('Movies:', movies);
+        const snapshot = await getCountFromServer(coll);
+        setMovieCount(snapshot.data().count)
+        console.log('count: ', movieCount);
+        const randomIndex = Math.floor(Math.random() * movieCount);
+        console.log('random index: ', randomIndex);
+        const movieSnapshot = await getDocs(collection(db, 'movies'));
+
+        // retrieve a random movie document
+        const randomMovie = movieSnapshot.docs[randomIndex].data();
+
+        // Output the random movie
+        setRandomMovie(randomMovie);
+        // console.log(randomMovie);
       } catch (error) {
-        console.error('Error fetching movies:', error);
+        console.error('Error fetching movie:', error);
       }
     };
     fetchMovies();
   }, []);
+  
+  
+  
+  // Get the current user
+  const currentUser = auth.currentUser;
+  const userId = currentUser ? currentUser.uid : null;
 
-  const generateRandomMovieIndex = () => {
-    if (movies.length === 0) {
+  const generateRandomMovie = (movies) => {
+    if (!movies || movies.length === 0) {
+      console.log('movies length', movies.length);
       return null;
     }
     const randomIndex = Math.floor(Math.random() * movies.length);
+    console.log("random index: ", randomIndex);
     return randomIndex;
   };
-
-  useEffect(() => {
-    if (newIndex !== null) {
-      const currentMovie = movies[newIndex];
-      console.log("current Movie: ", currentMovie);
-      // Perform any additional operations here
-    }
-  }, [newIndex, movies]);
 
   const handlePanResponderRelease = async (_, gesture) => {
     const Threshold = 150;
     const velocity = Math.sqrt(gesture.vx ** 2 + gesture.vy ** 2);
-  
+    
     if (gesture.dx > Threshold || gesture.dx < -Threshold || velocity > 1) {
       if (gesture.dx > 120) {
         Animated.timing(heartOpacity, {
@@ -73,14 +74,8 @@ const HomeScreen = () => {
           }).start();
         });
         // Save liked movie
-        const currentMovie = movies[currentMovieIndex];
-        console.log("current Movie: ", movies[0]);
-        if (currentMovie && userId) {
-          try {
-            await saveLikedMovie(userId, currentMovie);
-          } catch (error) {
-            console.log('Error saving liked movie:', error);
-          }
+        if (randomMovie && userId) {
+          saveLikedMovie(userId, randomMovie);
         }
       } else if (gesture.dx < -120) {
         Animated.timing(thumbsDownOpacity, {
@@ -95,21 +90,22 @@ const HomeScreen = () => {
           }).start();
         });
       }
-  
-      const newIndex = generateRandomMovieIndex();
-  if (newIndex !== null) {
-    setCurrentMovieIndex(newIndex);
-    const currentMovie = movies[newIndex];
-    if (currentMovie) {
-      console.log("current Movie: ", currentMovie);
-    } else {
-      console.log("No movie found at index:", newIndex);
+      try {
+        console.log('movies count: ', movieCount);
+        const randomIndex = Math.floor(Math.random() * movieCount);
+        console.log('random index: ', randomIndex);
+        const movieSnapshot = await getDocs(collection(db, 'movies'));
+
+        // retrieve a random movie document
+        const randomMovie = movieSnapshot.docs[randomIndex].data();
+
+        // Output the random movie
+        setRandomMovie(randomMovie);
+      } catch (error) {
+        console.error('Error fetching movie:', error);
+      }
     }
-  } else {
-    console.log("No movies available.", movies);
-  }
-    }
-  
+    
     Animated.spring(pan, {
       toValue: { x: 0, y: 0 },
       useNativeDriver: false,
@@ -117,7 +113,6 @@ const HomeScreen = () => {
       friction: 10,
     }).start();
   };
-  
 
   const panResponder = React.useRef(
     PanResponder.create({
@@ -131,16 +126,12 @@ const HomeScreen = () => {
 
   // Function to navigate to MovieDetailsScreen
   const goToMovieDetails = () => {
-    const currentMovie = movies[currentMovieIndex];
-    navigation.navigate('MovieDetailsScreen', { movie: currentMovie });
+    navigation.navigate('MovieDetailsScreen', { movie : randomMovie});
   };
 
   return (
-    // Inside your return statement
-<View style={styles.container}>
-  {movies.length > 0 ? (
-    <>
-      <Text style={styles.title}>{movies[currentMovieIndex].title}</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>{movies ? (randomMovie ? randomMovie.title : 'Swipe to begin') : 'Fetching movies'}</Text>
       <Animated.View
         style={[
           styles.card,
@@ -149,9 +140,9 @@ const HomeScreen = () => {
           },
         ]}
         {...panResponder.panHandlers}>
-        <Text>{movies[currentMovieIndex].description}</Text>
-        {movies[currentMovieIndex].poster && (
-          <Image source={{ uri: movies[currentMovieIndex].poster }} style={styles.movieImage} />
+        <Text>{randomMovie ? randomMovie.description : 'Swipe Left to dislike'}</Text>
+        {randomMovie && randomMovie.poster && (
+          <Image source={{ uri: randomMovie.poster }} style={styles.movieImage} />
         )}
       </Animated.View>
       <View style={styles.swipeTextContainer}>
@@ -165,19 +156,13 @@ const HomeScreen = () => {
       <Animated.Image
         source={require('../assets/homePage/CrossDislike.png')}
         style={[styles.icon, { opacity: thumbsDownOpacity }]}
-      />
+      />    
       {/* Button to navigate to MovieDetailsScreen */}
       <TouchableOpacity style={styles.button} onPress={goToMovieDetails}>
         <Text style={styles.buttonText}>Movie Details</Text>
       </TouchableOpacity>
-    </>
-  ) : (
-    <Text style={styles.title}>Fetching movies...</Text>
-  )}
-</View>
-
+    </View>
   );
-  
 };
 
 const styles = StyleSheet.create({
