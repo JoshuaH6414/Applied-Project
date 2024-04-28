@@ -2,18 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated, PanResponder, Image, TouchableOpacity } from 'react-native';
 import { collection, getDocs, query, limit, doc, getCountFromServer } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { saveLikedMovie } from '../utils/saveLikedMovie'; 
+import saveLikedMovie from '../utils/saveLikedMovie'; 
 import { auth } from '../firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
 
 const HomeScreen = () => {
   const [randomMovie, setRandomMovie] = useState(null);
+  let indexToSave;
   const pan = React.useRef(new Animated.ValueXY()).current;
   const heartOpacity = React.useRef(new Animated.Value(0)).current;
   const thumbsDownOpacity = React.useRef(new Animated.Value(0)).current;
   const navigation = useNavigation();
-  const [movies, setMovies] = useState(null);
-  const [randomIndex, setRandomIndex] = useState(0);
   const [movieCount, setMovieCount] = useState(0);
 
   useEffect(()=> {
@@ -25,6 +24,7 @@ const HomeScreen = () => {
         console.log('count: ', movieCount);
         const randomIndex = Math.floor(Math.random() * movieCount);
         console.log('random index: ', randomIndex);
+        indexToSave = randomIndex;
         const movieSnapshot = await getDocs(collection(db, 'movies'));
 
         // retrieve a random movie document
@@ -38,29 +38,12 @@ const HomeScreen = () => {
       }
     };
     fetchMovies();
-  }, []);
-  
-
-  useEffect(() => {
-    console.log('movies count:', movieCount);
-    console.log('random index:', randomIndex);
-  }, [randomIndex]);
-  
+  }, []); 
   
   
   // Get the current user
   const currentUser = auth.currentUser;
   const userId = currentUser ? currentUser.uid : null;
-
-  const generateRandomMovie = (movies) => {
-    if (!movies || movies.length === 0) {
-      console.log('movies length', movies.length);
-      return null;
-    }
-    const randomIndex = Math.floor(Math.random() * movies.length);
-    console.log("random index: ", randomIndex);
-    return randomIndex;
-  };
 
   const handlePanResponderRelease = async (_, gesture) => {
     const Threshold = 150;
@@ -80,8 +63,9 @@ const HomeScreen = () => {
           }).start();
         });
         // Save liked movie
-        if (randomMovie && userId) {
-          saveLikedMovie(userId, randomMovie);
+        console.log("liked movie", indexToSave , userId)
+        if (indexToSave && userId) {
+          await saveLikedMovie(userId, indexToSave);
         }
       } else if (gesture.dx < -120) {
         Animated.timing(thumbsDownOpacity, {
@@ -103,13 +87,14 @@ const HomeScreen = () => {
 
         if (totalCount > 0) {
           const randomIndex = Math.floor(Math.random() * totalCount);
-          console.log('random index:', randomIndex);
+          //console.log('random index:', randomIndex);
 
           const movieSnapshot = await getDocs(collection(db, 'movies'));
           const randomMovie = movieSnapshot.docs[randomIndex].data();
 
           setMovieCount(totalCount);
           setRandomMovie(randomMovie);
+          indexToSave = randomIndex;
         } else {
           console.log('No movies found in the collection.');
         }
@@ -143,7 +128,7 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{movies ? (randomMovie ? randomMovie.title : 'Swipe to begin') : 'Fetching movies'}</Text>
+      <Text style={styles.title}>{randomMovie ? (randomMovie ? randomMovie.title : 'Swipe to begin') : 'Fetching movies'}</Text>
       <Animated.View
         style={[
           styles.card,
