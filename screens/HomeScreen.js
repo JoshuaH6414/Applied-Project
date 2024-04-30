@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, PanResponder, Image, TouchableOpacity } from 'react-native';
-import { collection, getDocs, query, limit, doc, getCountFromServer } from 'firebase/firestore';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { collection, getDocs, getCountFromServer } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import saveLikedMovie from '../utils/saveLikedMovie'; 
 import { auth } from '../firebaseConfig';
@@ -8,156 +8,160 @@ import { useNavigation } from '@react-navigation/native';
 
 const HomeScreen = () => {
   const [randomMovie, setRandomMovie] = useState(null);
-  let indexToSave;
-  const pan = React.useRef(new Animated.ValueXY()).current;
-  const heartOpacity = React.useRef(new Animated.Value(0)).current;
-  const thumbsDownOpacity = React.useRef(new Animated.Value(0)).current;
-  const navigation = useNavigation();
+  let indexToSave = useRef(null);
   const [movieCount, setMovieCount] = useState(0);
+  const [loading, setLoading] = useState(false); // New state for loading indicator
+  const navigation = useNavigation();
 
+  const pan = useRef(new Animated.ValueXY()).current;
+  const heartOpacity = useRef(new Animated.Value(0)).current;
+  const thumbsDownOpacity = useRef(new Animated.Value(0)).current;
+  
   useEffect(()=> {
     const fetchMovies = async () => {
+      //setLoading(true); 
       try {
         const coll = collection(db,'movies')
         const snapshot = await getCountFromServer(coll);
         setMovieCount(snapshot.data().count);
-        console.log('count: ', movieCount);
-        const randomIndex = Math.floor(Math.random() * movieCount);
-        console.log('random index: ', randomIndex);
-        indexToSave = randomIndex;
+        const randomIndex = Math.floor(Math.random() * snapshot.data().count);
+        indexToSave.current = randomIndex; // Save the random index
         const movieSnapshot = await getDocs(collection(db, 'movies'));
 
-        // retrieve a random movie document
         const randomMovie = movieSnapshot.docs[randomIndex].data();
-
-        // Output the random movie
         setRandomMovie(randomMovie);
-        // console.log(randomMovie);
       } catch (error) {
         console.error('Error fetching movie:', error);
+      } finally {
+        setLoading(false); // Set loading to false when fetching ends
       }
     };
     fetchMovies();
   }, []); 
   
-  
-  // Get the current user
   const currentUser = auth.currentUser;
   const userId = currentUser ? currentUser.uid : null;
 
-  const handlePanResponderRelease = async (_, gesture) => {
-    const Threshold = 150;
-    const velocity = Math.sqrt(gesture.vx ** 2 + gesture.vy ** 2);
-    
-    if (gesture.dx > Threshold || gesture.dx < -Threshold || velocity > 1) {
-      if (gesture.dx > 120) {
-        Animated.timing(heartOpacity, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }).start(() => {
-          Animated.timing(heartOpacity, {
-            toValue: 0,
-            duration: 0,
-            useNativeDriver: true,
-          }).start();
-        });
-        // Save liked movie
-        console.log("liked movie", indexToSave , userId)
-        if (indexToSave && userId) {
-          await saveLikedMovie(userId, indexToSave);
-        }
-      } else if (gesture.dx < -120) {
-        Animated.timing(thumbsDownOpacity, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }).start(() => {
-          Animated.timing(thumbsDownOpacity, {
-            toValue: 0,
-            duration: 0,
-            useNativeDriver: true,
-          }).start();
-        });
+  const handleLike = async () => {
+    try {
+      if (randomMovie && userId) {
+        //setLoading(true);
+        await saveLikedMovie(userId, indexToSave.current); // Save using the stored index
+        console.log("Movie liked:", randomMovie.title);
+        animateHeart(); // Animate heart icon
       }
-      try {
-        const coll = collection(db, 'movies');
-      const snapshot = await getCountFromServer(coll);
-      const totalCount = snapshot.data().count;
-
-        if (totalCount > 0) {
-          const randomIndex = Math.floor(Math.random() * totalCount);
-          //console.log('random index:', randomIndex);
-
-          const movieSnapshot = await getDocs(collection(db, 'movies'));
-          const randomMovie = movieSnapshot.docs[randomIndex].data();
-
-          setMovieCount(totalCount);
-          setRandomMovie(randomMovie);
-          indexToSave = randomIndex;
-        } else {
-          console.log('No movies found in the collection.');
-        }
-      } catch (error) {
-        console.error('Error fetching movie:', error);
-      }
+    } catch (error) {
+      console.error('Error liking movie:', error);
     }
-    
-    Animated.spring(pan, {
-      toValue: { x: 0, y: 0 },
-      useNativeDriver: false,
-      tension: 100,
-      friction: 10,
-    }).start();
+    generateRandomMovie();
   };
 
-  const panResponder = React.useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], {
-        useNativeDriver: false,
-      }),
-      onPanResponderRelease: handlePanResponderRelease,
-    })
-  ).current;
+  const handleDislike = () => {
+    //setLoading(true);
+    console.log("Movie disliked:", randomMovie.title);
+    animateDislike(); // Animate dislike icon
+    generateRandomMovie();
+  };
 
-  // Function to navigate to MovieDetailsScreen
+  const animateHeart = () => {
+    Animated.timing(heartOpacity, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start(() => {
+      Animated.timing(heartOpacity, {
+        toValue: 0,
+        duration: 0,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
+  const animateDislike = () => {
+    Animated.timing(thumbsDownOpacity, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start(() => {
+      Animated.timing(thumbsDownOpacity, {
+        toValue: 0,
+        duration: 0,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
+  const generateRandomMovie = async () => {
+    try {
+      setLoading(true); // Start the loading animation
+  
+      const coll = collection(db, 'movies');
+      const snapshot = await getCountFromServer(coll);
+      const totalCount = snapshot.data().count;
+  
+      if (totalCount > 0) {
+        const randomIndex = Math.floor(Math.random() * totalCount);
+        indexToSave.current = randomIndex; // Update the stored index
+        const movieSnapshot = await getDocs(collection(db, 'movies'));
+        const randomMovie = movieSnapshot.docs[randomIndex].data();
+  
+        setMovieCount(totalCount);
+        setRandomMovie(randomMovie);
+      } else {
+        console.log('No movies found in the collection.');
+      }
+    } catch (error) {
+      console.error('Error fetching movie:', error);
+    } finally {
+      setLoading(false); // Stop the loading animation
+    }
+  };
+
   const goToMovieDetails = () => {
-    navigation.navigate('MovieDetailsScreen', { movie : randomMovie});
+    navigation.navigate('MovieDetailsScreen', { movie : randomMovie });
+  };
+
+  const goToBookmarks = () => {
+    // Navigate to bookmarks screen or perform other action
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{randomMovie ? (randomMovie ? randomMovie.title : 'Swipe to begin') : 'Fetching movies'}</Text>
-      <Animated.View
-        style={[
-          styles.card,
-          {
-            transform: [{ translateX: pan.x }, { translateY: pan.y }],
-          },
-        ]}
-        {...panResponder.panHandlers}>
-        <Text>{randomMovie ? randomMovie.description : 'Swipe Left to dislike'}</Text>
-        {randomMovie && randomMovie.poster && (
-          <Image source={{ uri: randomMovie.poster }} style={styles.movieImage} />
-        )}
-      </Animated.View>
-      <View style={styles.swipeTextContainer}>
-        <Image source={require('../assets/homePage/CrossDislike.png')} style={styles.swipeIcon} />
-        <Image source={require('../assets/homePage/Heart.png')} style={styles.swipeIcon} />
-      </View>
-      <Animated.Image
-        source={require('../assets/homePage/Heart.png')}
-        style={[styles.icon, { opacity: heartOpacity }]}
-      />
-      <Animated.Image
-        source={require('../assets/homePage/CrossDislike.png')}
-        style={[styles.icon, { opacity: thumbsDownOpacity }]}
-      />    
-      {/* Button to navigate to MovieDetailsScreen */}
-      <TouchableOpacity style={styles.button} onPress={goToMovieDetails}>
-        <Text style={styles.buttonText}>Movie Details</Text>
-      </TouchableOpacity>
+      {loading ? (
+        <ActivityIndicator size="large" color="white" /> 
+      ) : (
+        <>
+          <Text style={styles.title}>{randomMovie ? randomMovie.title : 'Fetching movies'}</Text>
+          <View style={styles.card}>
+            <Text>{randomMovie ? randomMovie.description : 'Swipe Left to dislike'}</Text>
+            {randomMovie && randomMovie.poster && (
+              <Image source={{ uri: randomMovie.poster }} style={styles.movieImage} />
+            )}
+          </View>
+          <View style={styles.swipeTextContainer}>
+            <TouchableOpacity onPress={handleDislike}>
+              <Image source={require('../assets/homePage/CrossDislike.png')} style={styles.dislikeIcon} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleLike}>
+              <Image source={require('../assets/homePage/Heart.png')} style={styles.heartIcon} />
+            </TouchableOpacity>
+          </View>
+          <Animated.Image
+            source={require('../assets/homePage/Heart.png')}
+            style={[styles.icon, { opacity: heartOpacity }]}
+          />
+          <Animated.Image
+            source={require('../assets/homePage/CrossDislike.png')}
+            style={[styles.icon, { opacity: thumbsDownOpacity }]}
+          />
+          <TouchableOpacity style={styles.button} onPress={goToMovieDetails}>
+            <Text style={styles.buttonText}>Movie{'\n'}details</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={goToBookmarks}>
+              <Image source={require('../assets/homePage/Bookmark.png')} style={styles.BookmarkIcon} />
+          </TouchableOpacity>
+        </>
+      )}
     </View>
   );
 };
@@ -175,18 +179,20 @@ const styles = StyleSheet.create({
     height: 450,
     backgroundColor: 'black',
     borderRadius: 10,
-    alignItems: 'center',
+    alignItems: 'left',
     justifyContent: 'center',
     borderWidth: 0,
     borderColor: '#ddd',
     elevation: 5,
+    bottom: -15,
+    left:-25,
   },
 
   swipeTextContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     position: 'absolute',
-    bottom: 20,
+    bottom: 15,
     left: 0,
     right: 0,
   },
@@ -206,23 +212,27 @@ const styles = StyleSheet.create({
   },
 
   button: {
-    backgroundColor: 'white',
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 20,
-    
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 5,
+    borderRadius: 15,
+    top: -200,
+    left: 158,
   },
   
   buttonText: {
-    color: 'black',
+    color: 'white',
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 10,
+    marginBottom: 5,
+    textAlign: 'left',
+    maxWidth: '80%',
+    paddingLeft: 10, 
   },
   
   movieImage: {
@@ -232,6 +242,37 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
     borderRadius: 10,
   },
+
+  heartIcon: {
+    position: 'absolute',
+    width: 50,
+    height: 50,
+    resizeMode: 'contain',
+    zIndex: 1,
+    top: -200,
+    left: 39, 
+  },
+
+  dislikeIcon: {
+  position: 'absolute',
+  width: 40,
+  height: 40,
+  resizeMode: 'contain',
+  zIndex: 1,
+  top: -120,
+  left: 230,
+},
+
+BookmarkIcon: {
+  position: 'absolute',
+  width: 50,
+  height: 50,
+  resizeMode: 'contain',
+  zIndex: 1,
+  top: -330,
+  left: 133, 
+},
+
 });
 
 export default HomeScreen;
