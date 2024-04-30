@@ -1,4 +1,4 @@
-import { db } from '../firebaseConfig'; // Assuming you have a firebaseConfig.js file
+import { db } from '../firebaseConfig'; 
 import { setDoc, collection, doc } from 'firebase/firestore';
 
 const saveLikedMovie = async (userId, movieData) => {
