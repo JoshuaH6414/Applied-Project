@@ -1,32 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import * as ImagePicker from 'react-native-image-picker'; // Import image picker library
 import { auth } from '../firebaseConfig.js'; // Import Firebase auth
+import { sendPasswordResetEmail } from 'firebase/auth';
 
 const UserAccountScreen = ({ navigation }) => {
-  const [profilePicture, setProfilePicture] = useState(null);
-
-  // Function to handle selecting an image from gallery
-  const handleSelectImage = () => {
-    const options = {
-      title: 'Select Profile Picture',
-      storageOptions: {
-        skipBackup: true,
-        path: 'images',
-      },
-    };
-
-    ImagePicker.launchImageLibrary(options, (response) => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.error) {
-        console.log('ImagePicker Error: ', response.error);
-      } else {
-        const source = { uri: response.uri };
-        setProfilePicture(source);
-      }
-    });
-  };
 
   // Function to handle user sign out
   const handleSignOut = () => {
@@ -39,19 +16,26 @@ const UserAccountScreen = ({ navigation }) => {
       .catch((error) => {
         console.error('Error signing out:', error);
       });
-  };
 
+  };
+  
+  // Function to handle password reset
+  const resetPassword = () => {
+    const emailAddress = auth.currentUser.email; // Get the current user's email address
+  
+    sendPasswordResetEmail(auth, emailAddress)
+      .then(() => {
+        console.log('Password reset email sent successfully');
+        // You can navigate to a success screen or display a message to the user
+      })
+      .catch((error) => {
+        console.error('Error sending password reset email:', error);
+        // Handle any errors, such as invalid email or network issues
+      });
+  };
+ 
   return (
     <View style={styles.container}>
-      <View style={styles.banner}>
-        <TouchableOpacity onPress={handleSelectImage}>
-          {profilePicture ? (
-            <Image source={profilePicture} style={styles.profilePicture} />
-          ) : (
-            <View style={styles.emptyProfilePicture} />
-          )}
-        </TouchableOpacity>
-      </View>
       <View style={styles.userInfo}>
         <Text style={styles.username}>Username</Text>
         <Text style={styles.bookmarks}>Bookmarks: 0</Text>
@@ -59,6 +43,7 @@ const UserAccountScreen = ({ navigation }) => {
       <View style={styles.buttonContainer}>
         <Button title="Go to Bookmarks" onPress={() => navigation.navigate('Bookmarks')} />
         <Button title="Log out" onPress={handleSignOut} />
+        <Button title="Edit Password" onPress={resetPassword} />
       </View>
     </View>
   );
@@ -106,5 +91,3 @@ const styles = StyleSheet.create({
 });
 
 export default UserAccountScreen;
-
-
