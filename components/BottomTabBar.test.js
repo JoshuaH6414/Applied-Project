@@ -27,5 +27,4 @@ describe('BottomTabBar component', () => {
     expect(navigation.navigate).toHaveBeenCalledWith('UserAccount');
   });
 
-  // Additional tests for styling, etc., can be added as needed
 });
