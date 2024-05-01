@@ -40,7 +40,7 @@ const HomeScreen = () => {
         setLoading(false);
       }
     };
-    //fetchMovies();
+    fetchMovies();
   }, []); 
   
   const currentUser = auth.currentUser;
@@ -56,13 +56,13 @@ const HomeScreen = () => {
     } catch (error) {
       console.error('Error liking movie:', error);
     }
-    //generateRandomMovie();
+    generateRandomMovie();
   };
 
   const handleDislike = () => {
     setLoading(true);
     console.log("Movie disliked:", randomMovie.title);
-    //generateRandomMovie();
+    generateRandomMovie();
   };
 
   const animateHeart = () => {
@@ -196,14 +196,14 @@ const styles = StyleSheet.create({
   card: {
     width: width * 0.7,
     height: height * 0.6,
-    backgroundColor: 'white',
+    backgroundColor: 'black',
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 0,
     borderColor: '#ddd',
     elevation: 5,
-    marginBottom: 80,
+    marginBottom: 100,
   },
 
   swipeTextContainer: {
