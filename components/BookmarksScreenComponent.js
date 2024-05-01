@@ -13,7 +13,7 @@ const BookmarksScreen = () => {
       const currentUser = auth.currentUser;
       const userId = currentUser ? currentUser.uid : null;
       if (userId) {
-        const userDocRef = doc(db, 'likedBookmarks', userId, 'bookmarks');
+        const userDocRef = doc(db, 'bookmarks', userId);
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists()) {
           const bookmarkedMoviesData = [];
@@ -64,12 +64,13 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#003426',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,
+    color:"white",
   },
   movieItem: {
     padding: 20,
