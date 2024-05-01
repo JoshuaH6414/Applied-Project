@@ -1,48 +1,60 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
-import { collection, getDocs, where, query } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
-import { auth } from '../firebaseConfig'; // Assuming you have access to auth
+import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebaseConfig'; // Import your Firebase configuration
+import { auth } from '../firebaseConfig'; // Import auth from your Firebase configuration
 
 const BookmarksScreen = () => {
-  const [likedMovies, setLikedMovies] = useState([]);
-  const currentUser = auth.currentUser;
-  const userId = currentUser ? currentUser.uid : null;
+  const [bookmarkedMovies, setBookmarkedMovies] = useState([]);
+
+  // Function to fetch bookmarked movies for the current user from the database
+  const fetchBookmarkedMovies = async () => {
+    try {
+      const currentUser = auth.currentUser;
+      const userId = currentUser ? currentUser.uid : null;
+      if (userId) {
+        const userDocRef = doc(db, 'likedBookmarks', userId, 'bookmarks');
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+          const bookmarkedMoviesData = [];
+          const bookmarksQuerySnapshot = await getDocs(collection(userDocRef));
+          bookmarksQuerySnapshot.forEach((doc) => {
+            bookmarkedMoviesData.push(doc.data());
+          });
+          setBookmarkedMovies(bookmarkedMoviesData);
+        } else {
+          console.log('No bookmarked movies found for the user.');
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching bookmarked movies:', error);
+    }
+  };
 
   useEffect(() => {
-    const fetchLikedMovies = async () => {
-      if (!userId) {
-        return; // No user is signed in
-      }
-      try {
-        // Query the "likedMovies" collection for documents where userId matches the current user's ID
-        const querySnapshot = await getDocs(query(collection(db, 'likedMovies'), where('userId', '==', userId)));
-        const moviesData = [];
-        querySnapshot.forEach((doc) => {
-          moviesData.push(doc.data());
-        });
-        setLikedMovies(moviesData);
-      } catch (error) {
-        console.error('Error fetching liked movies:', error); 
-      }
-    };
+    fetchBookmarkedMovies();
+  }, []);
 
-    fetchLikedMovies();
-  }, [userId]); // Trigger the effect whenever userId changes
+  // Render function for each bookmarked movie item
+  const renderMovieItem = ({ item }) => (
+    <View style={styles.movieItem}>
+      <Text>{item.title}</Text>
+      {/* Add any additional movie details you want to display */}
+    </View>
+  );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Bookmarks</Text>
-      <FlatList
-        data={likedMovies}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.movieContainer}>
-            <Text style={styles.movieTitle}>{item.title}</Text>
-            <Text>{item.description}</Text>
-          </View>
-        )}
-      />
+      <Text style={styles.title}>Your Bookmarked Movies</Text>
+      {bookmarkedMovies.length > 0 ? (
+        <FlatList
+          data={bookmarkedMovies}
+          renderItem={renderMovieItem}
+          keyExtractor={(item, index) => index.toString()}
+        />
+      ) : (
+        <Text style={styles.emptyMessage}>No movies bookmarked yet.</Text>
+      )}
     </View>
   );
 };
@@ -50,29 +62,23 @@ const BookmarksScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'white',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,
-    top: '10%'
   },
-  movieContainer: {
-    padding: 10,
+  movieItem: {
+    padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
   },
-  movieTitle: {
+  emptyMessage: {
     fontSize: 18,
-    fontWeight: 'bold',
-  },
-  pageTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    top: '20%'
+    color: '#777',
   },
 });
 
