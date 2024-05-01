@@ -1,31 +1,41 @@
-// Import the necessary dependencies
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig'; // Import your Firebase configuration
+import { auth } from '../firebaseConfig'; // Import auth from your Firebase configuration
 
 const BookmarksScreen = () => {
-  const [likedMovies, setLikedMovies] = useState([]);
+  const [bookmarkedMovies, setBookmarkedMovies] = useState([]);
 
-  // Function to fetch liked movies from the database
-  const fetchLikedMovies = async () => {
+  // Function to fetch bookmarked movies for the current user from the database
+  const fetchBookmarkedMovies = async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, 'likedMovies'));
-      const moviesData = [];
-      querySnapshot.forEach((doc) => {
-        moviesData.push(doc.data());
-      });
-      setLikedMovies(moviesData);
+      const currentUser = auth.currentUser;
+      const userId = currentUser ? currentUser.uid : null;
+      if (userId) {
+        const userDocRef = doc(db, 'likedBookmarks', userId, 'bookmarks');
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+          const bookmarkedMoviesData = [];
+          const bookmarksQuerySnapshot = await getDocs(collection(userDocRef));
+          bookmarksQuerySnapshot.forEach((doc) => {
+            bookmarkedMoviesData.push(doc.data());
+          });
+          setBookmarkedMovies(bookmarkedMoviesData);
+        } else {
+          console.log('No bookmarked movies found for the user.');
+        }
+      }
     } catch (error) {
-      console.error('Error fetching liked movies:', error);
+      console.error('Error fetching bookmarked movies:', error);
     }
   };
 
   useEffect(() => {
-    fetchLikedMovies();
+    fetchBookmarkedMovies();
   }, []);
 
-  // Render function for each movie item in the watch later list
+  // Render function for each bookmarked movie item
   const renderMovieItem = ({ item }) => (
     <View style={styles.movieItem}>
       <Text>{item.title}</Text>
@@ -35,15 +45,15 @@ const BookmarksScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Your Liked Movies</Text>
-      {likedMovies.length > 0 ? (
+      <Text style={styles.title}>Your Bookmarked Movies</Text>
+      {bookmarkedMovies.length > 0 ? (
         <FlatList
-          data={likedMovies}
+          data={bookmarkedMovies}
           renderItem={renderMovieItem}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item, index) => index.toString()}
         />
       ) : (
-        <Text style={styles.emptyMessage}>No movies liked yet.</Text>
+        <Text style={styles.emptyMessage}>No movies bookmarked yet.</Text>
       )}
     </View>
   );
@@ -73,6 +83,3 @@ const styles = StyleSheet.create({
 });
 
 export default BookmarksScreen;
-
-
-
