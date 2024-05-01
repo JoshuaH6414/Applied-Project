@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Animated, Image, TouchableOpacity, ActivityIndi
 import { collection, getDocs, getCountFromServer } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import saveLikedMovie from '../utils/saveLikedMovie'; 
+import saveBookmarkedMovie from '../utils/saveBookmarkedMovie';
 import { auth } from '../firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
 
@@ -18,6 +19,7 @@ const HomeScreen = () => {
   const pan = useRef(new Animated.ValueXY()).current;
   const heartOpacity = useRef(new Animated.Value(0)).current;
   const thumbsDownOpacity = useRef(new Animated.Value(0)).current;
+  const [isBookmarked, setIsBookmarked] = useState(false)
   
   useEffect(()=> {
     const fetchMovies = async () => {
@@ -121,8 +123,17 @@ const HomeScreen = () => {
     navigation.navigate('MovieDetailsScreen', { movie : randomMovie });
   };
   
-  const goToBookmarks = () => {
-    // Navigate to bookmarks change with add to book marks 
+  const addToBookmarks = async () => {
+    try {
+      //setLoading(true);
+      await saveBookmarkedMovie(userId, randomMovie);
+      console.log("Movie bookmarked", randomMovie.title);
+      setIsBookmarked(true)
+    } catch (error) {
+      console.error("Error Bookmarking movie", error);
+    } finally {
+      //setLoading(false)
+    } 
   };
 
   return (
@@ -146,8 +157,8 @@ const HomeScreen = () => {
               <TouchableOpacity onPress={handleLike}>
                 <Image source={require('../assets/homePage/Heart.png')} style={styles.heartIcon} />
               </TouchableOpacity>
-              <TouchableOpacity onPress={goToBookmarks}>
-                <Image source={require('../assets/homePage/Bookmark.png')} style={styles.bookmarkIcon} />
+              <TouchableOpacity onPress={addToBookmarks}>
+                <Image source={isBookmarked ? require('../assets/homePage/BookmarkSaved.png'): require('../assets/homePage/Bookmark.png')} style={styles.bookmarkIcon} />
               </TouchableOpacity>
             </View>
             <View style={styles.buttonContainer}>
@@ -223,10 +234,10 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '80%', // Adjust the width as needed
+    width: '80%', 
     position: 'absolute',
     bottom: height * 0.09,
-    left: '10%', // Adjust the left position as needed
+    left: '10%', 
     marginBottom:5,
     marginTop:10,
   },
