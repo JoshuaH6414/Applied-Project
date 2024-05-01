@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Image, TouchableOpacity, ActivityIndicator} from 'react-native';
+import { View, Text, StyleSheet, Animated, Image, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
 import { collection, getDocs, getCountFromServer } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import saveLikedMovie from '../utils/saveLikedMovie'; 
 import { auth } from '../firebaseConfig';
 import { useNavigation } from '@react-navigation/native';
+
+const { width, height } = Dimensions.get('window');
 
 const HomeScreen = () => {
   const [randomMovie, setRandomMovie] = useState(null);
@@ -36,7 +38,7 @@ const HomeScreen = () => {
         setLoading(false);
       }
     };
-    fetchMovies();
+    //fetchMovies();
   }, []); 
   
   const currentUser = auth.currentUser;
@@ -52,13 +54,13 @@ const HomeScreen = () => {
     } catch (error) {
       console.error('Error liking movie:', error);
     }
-    generateRandomMovie();
+    //generateRandomMovie();
   };
 
   const handleDislike = () => {
     setLoading(true);
     console.log("Movie disliked:", randomMovie.title);
-    generateRandomMovie();
+    //generateRandomMovie();
   };
 
   const animateHeart = () => {
@@ -131,18 +133,32 @@ const HomeScreen = () => {
         <>
           <Text style={styles.title}>{randomMovie ? randomMovie.title : 'Fetching movies'}</Text>
           <View style={styles.card}>
-            <Text>{randomMovie ? randomMovie.description : 'Swipe Left to dislike'}</Text>
+            <Text>{randomMovie ? randomMovie.description : 'Loading Movies'}</Text>
             {randomMovie && randomMovie.poster && (
               <Image source={{ uri: randomMovie.poster }} style={styles.movieImage} />
             )}
           </View>
           <View style={styles.swipeTextContainer}>
-            <TouchableOpacity onPress={handleDislike}>
-              <Image source={require('../assets/homePage/CrossDislike.png')} style={styles.dislikeIcon} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleLike}>
-              <Image source={require('../assets/homePage/Heart.png')} style={styles.heartIcon} />
-            </TouchableOpacity>
+            <View style={styles.iconContainer}>
+              <TouchableOpacity onPress={handleDislike}>
+                <Image source={require('../assets/homePage/CrossDislike.png')} style={styles.dislikeIcon} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleLike}>
+                <Image source={require('../assets/homePage/Heart.png')} style={styles.heartIcon} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={goToBookmarks}>
+                <Image source={require('../assets/homePage/Bookmark.png')} style={styles.bookmarkIcon} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={styles.nextButton} onPress={goToMovieDetails}>
+                <Text style={styles.buttonText}>Details</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.nextButton} onPress={generateRandomMovie}>
+                <Text style={styles.buttonText}>Next</Text>
+              </TouchableOpacity>
+
+            </View>
           </View>
           <Animated.Image
             source={require('../assets/homePage/Heart.png')}
@@ -152,15 +168,6 @@ const HomeScreen = () => {
             source={require('../assets/homePage/CrossDislike.png')}
             style={[styles.icon, { opacity: thumbsDownOpacity }]}
           />
-          <TouchableOpacity style={styles.NextMovie} onPress={generateRandomMovie}>
-            <Text style={styles.buttonText2}>Next Movie</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={goToMovieDetails}>
-            <Text style={styles.buttonText}>Movie{'\n'}Details</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={goToBookmarks}>
-              <Image source={require('../assets/homePage/Bookmark.png')} style={styles.BookmarkIcon} />
-          </TouchableOpacity>
         </>
       )}
     </View>
@@ -176,31 +183,25 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    width: 300,
-    height: 450,
-    backgroundColor: 'black',
+    width: width * 0.7,
+    height: height * 0.6,
+    backgroundColor: 'white',
     borderRadius: 10,
-    alignItems: 'left',
+    alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 0,
     borderColor: '#ddd',
     elevation: 5,
-    bottom: -15,
-    left:-25,
+    marginBottom: 80,
   },
 
   swipeTextContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     position: 'absolute',
-    bottom: 15,
+    bottom: height * 0.02,
     left: 0,
     right: 0,
-  },
-
-  swipeIcon: {
-    width: 40,
-    height: 40,
   },
 
   icon: {
@@ -209,29 +210,49 @@ const styles = StyleSheet.create({
     height: 100,
     resizeMode: 'contain',
     zIndex: 1,
-    top: '20%',
+    top: height * 0.2,
+  },
+
+  iconContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    width: '100%',
+  },
+
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '80%', // Adjust the width as needed
+    position: 'absolute',
+    bottom: height * 0.09,
+    left: '10%', // Adjust the left position as needed
+    marginBottom:5,
+    marginTop:10,
+  },
+
+  nextButton: {
+    width: width * 0.3,
+    height: height * 0.05,
+    backgroundColor: 'rgba(173, 216, 230, 0.5)',
+    padding: 10,
+    borderRadius: 15,
   },
 
   button: {
+    width: width * 0.3,
+    height: height * 0.05,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    padding: 5,
+    padding: 10,
     borderRadius: 15,
-    top: -200,
-    left: 158,
   },
-  
+
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
     textAlign: 'center',
   },
 
-  buttonText2: {
-    color: 'black',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  
   title: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -241,58 +262,34 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
     paddingLeft: 10, 
   },
-  
+
   movieImage: {
-    alignContent: "center",
     width: '100%',
-    height: 450,
+    height: '100%',
     resizeMode: 'cover',
     borderRadius: 10,
   },
 
   heartIcon: {
-    position: 'absolute',
-    width: 50,
-    height: 50,
+    width: 40,
+    height: 40,
     resizeMode: 'contain',
-    zIndex: 1,
-    top: -200,
-    left: 39, 
+    marginTop: 10,
   },
 
   dislikeIcon: {
-  position: 'absolute',
-  width: 40,
-  height: 40,
-  resizeMode: 'contain',
-  zIndex: 1,
-  top: -120,
-  left: 230,
-},
+    width: 35,
+    height: 35,
+    resizeMode: 'contain',
+    marginTop: 10,
+  },
 
-BookmarkIcon: {
-  position: 'absolute',
-  width: 50,
-  height: 50,
-  resizeMode: 'contain',
-  zIndex: 1,
-  top: -330,
-  left: 133, 
-},
-
-NextMovie: {
-  position: 'absolute',
-  width: 100,
-  height: 40,
-  resizeMode: 'contain',
-  zIndex: 1,
-  top: 570,
-  left: 136, 
-  backgroundColor: 'rgba(173, 216, 230, 1)',
-  padding: 10,
-  borderRadius: 15,
-}
-
+  bookmarkIcon: {
+    width: 40,
+    height: 40,
+    resizeMode: 'contain',
+    marginTop: 10,
+  },
 });
 
 export default HomeScreen;
