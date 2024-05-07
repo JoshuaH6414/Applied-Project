@@ -1,32 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import * as ImagePicker from 'react-native-image-picker'; // Import image picker library
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { auth } from '../firebaseConfig.js'; // Import Firebase auth
+import { sendPasswordResetEmail } from 'firebase/auth';
 
 const UserAccountScreen = ({ navigation }) => {
-  const [profilePicture, setProfilePicture] = useState(null);
-
-  // Function to handle selecting an image from gallery
-  const handleSelectImage = () => {
-    const options = {
-      title: 'Select Profile Picture',
-      storageOptions: {
-        skipBackup: true,
-        path: 'images',
-      },
-    };
-
-    ImagePicker.launchImageLibrary(options, (response) => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.error) {
-        console.log('ImagePicker Error: ', response.error);
-      } else {
-        const source = { uri: response.uri };
-        setProfilePicture(source);
-      }
-    });
-  };
 
   // Function to handle user sign out
   const handleSignOut = () => {
@@ -40,25 +17,38 @@ const UserAccountScreen = ({ navigation }) => {
         console.error('Error signing out:', error);
       });
   };
-
+  
+  // Function to handle password reset
+  const resetPassword = () => {
+    const emailAddress = auth.currentUser.email; // Get the current user's email address
+  
+    sendPasswordResetEmail(auth, emailAddress)
+      .then(() => {
+        console.log('Password reset email sent successfully');
+        // You can navigate to a success screen or display a message to the user
+      })
+      .catch((error) => {
+        console.error('Error sending password reset email:', error);
+        // Handle any errors, such as invalid email or network issues
+      });
+  };
+ 
   return (
     <View style={styles.container}>
-      <View style={styles.banner}>
-        <TouchableOpacity onPress={handleSelectImage}>
-          {profilePicture ? (
-            <Image source={profilePicture} style={styles.profilePicture} />
-          ) : (
-            <View style={styles.emptyProfilePicture} />
-          )}
-        </TouchableOpacity>
-      </View>
       <View style={styles.userInfo}>
         <Text style={styles.username}>Username</Text>
         <Text style={styles.bookmarks}>Bookmarks: 0</Text>
       </View>
       <View style={styles.buttonContainer}>
-        <Button title="Go to Bookmarks" onPress={() => navigation.navigate('Bookmarks')} />
-        <Button title="Log out" onPress={handleSignOut} />
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Bookmarks')}>
+          <Text style={styles.buttonText}>Go to Bookmarks</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleSignOut}>
+          <Text style={styles.buttonText}>Log out</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={resetPassword}>
+          <Text style={styles.buttonText}>Edit Password</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -70,41 +60,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
     padding: 20,
-  },
-  banner: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  profilePicture: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  emptyProfilePicture: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#ccc',
+    backgroundColor:"#003426",
   },
   userInfo: {
     marginBottom: 20,
   },
   username: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
+    color:"white",
+    marginTop:200,
   },
   bookmarks: {
     fontSize: 16,
-    color: '#555',
+    color: '#777',
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
+    width: '60%',
+    padding: 10,
+  },
+  button: {
+    backgroundColor: 'rgba(173, 216, 230, 0.5)',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: 'bold',
   },
 });
 
 export default UserAccountScreen;
-
-
