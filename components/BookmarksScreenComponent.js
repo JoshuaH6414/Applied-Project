@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebaseConfig'; // Import your Firebase configuration
-import { auth } from '../firebaseConfig'; // Import auth from your Firebase configuration
+import { collection, getDocs, query, limit } from 'firebase/firestore';
+import { db, auth } from '../firebaseConfig'; // Import both db and auth from your Firebase configuration
 
 const BookmarksScreen = () => {
   const [bookmarkedMovies, setBookmarkedMovies] = useState([]);
@@ -13,18 +12,22 @@ const BookmarksScreen = () => {
       const currentUser = auth.currentUser;
       const userId = currentUser ? currentUser.uid : null;
       if (userId) {
-        const userDocRef = doc(db, 'bookmarks', userId);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
+        const userDocRef = collection(db, 'likedBookmarks', userId, 'bookmarks');
+        const bookmarksQuery = query(userDocRef, limit(10)); // Limit the query to fetch only 10 documents
+        const querySnapshot = await getDocs(bookmarksQuery);
+
+        if (!querySnapshot.empty) {
           const bookmarkedMoviesData = [];
-          const bookmarksQuerySnapshot = await getDocs(collection(userDocRef));
-          bookmarksQuerySnapshot.forEach((doc) => {
+          querySnapshot.forEach((doc) => {
             bookmarkedMoviesData.push(doc.data());
           });
+
           setBookmarkedMovies(bookmarkedMoviesData);
         } else {
-          console.log('No bookmarked movies found for the user.');
+          console.log('No bookmarked movies found.');
         }
+      } else {
+        console.log('User not authenticated.');
       }
     } catch (error) {
       console.error('Error fetching bookmarked movies:', error);
@@ -38,7 +41,7 @@ const BookmarksScreen = () => {
   // Render function for each bookmarked movie item
   const renderMovieItem = ({ item }) => (
     <View style={styles.movieItem}>
-      <Text>{item.title}</Text>
+      <Text style={styles.title}>{item.title}</Text>
       {/* Add any additional movie details you want to display */}
     </View>
   );
@@ -70,7 +73,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,
-    color:"white",
+    color: 'white',
   },
   movieItem: {
     padding: 20,
