@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Image, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
-import { collection, getDocs, getCountFromServer } from 'firebase/firestore';
+import { collection, getDocs, getCountFromServer, doc, getDoc, addDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import saveLikedMovie from '../utils/saveLikedMovie'; 
 import saveBookmarkedMovie from '../utils/saveBookmarkedMovie';
@@ -109,15 +109,17 @@ const HomeScreen = () => {
   
         setMovieCount(totalCount);
         setRandomMovie(randomMovie);
+        setIsBookmarked(false); // Reset bookmark state
       } else {
         console.log('No movies found in the collection.');
       }
     } catch (error) {
       console.error('Error fetching movie:', error);
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
+  
 
   const goToMovieDetails = () => {
     navigation.navigate('MovieDetailsScreen', { movie : randomMovie });
@@ -125,16 +127,26 @@ const HomeScreen = () => {
   
   const addToBookmarks = async () => {
     try {
-      //setLoading(true);
-      await saveBookmarkedMovie(userId, randomMovie);
-      console.log("Movie bookmarked", randomMovie.title);
-      setIsBookmarked(true)
+      if (!isBookmarked && randomMovie && userId) {
+        await saveBookmarkedMovie(userId, randomMovie);
+        console.log("Movie bookmarked", randomMovie.title);
+        setIsBookmarked(true); // Toggle bookmark state
+      }
     } catch (error) {
       console.error("Error Bookmarking movie", error);
-    } finally {
-      //setLoading(false)
-    } 
+    }
   };
+  
+  
+  const saveBookmarkedMovie = async (userId, movie) => {
+    try {
+      const userBookmarksRef = collection(db, 'likedBookmarks', userId, 'bookmarks');
+      await addDoc(userBookmarksRef, movie);
+    } catch (error) {
+      console.error("Error saving bookmarked movie:", error);
+    }
+  };
+  
 
   return (
     <View style={styles.container}>
