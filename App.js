@@ -15,7 +15,7 @@ import HomeScreen from './screens/HomeScreen';
 import MovieDetailsScreen from './screens/MovieDetailsScreen';
 import BookmarksScreen from './components/BookmarksScreenComponent';
 import UserAccountScreen from './screens/UserAccountScreen';
-import SignUpScreen from './screens/SignUpScreen';
+
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
