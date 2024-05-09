@@ -10,6 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 const { width, height } = Dimensions.get('window');
 
 const HomeScreen = () => {
+  // State variables
   const [randomMovie, setRandomMovie] = useState(null);
   let indexToSave = useRef(null);
   const [movieCount, setMovieCount] = useState(0);
@@ -22,14 +23,18 @@ const HomeScreen = () => {
   const [isBookmarked, setIsBookmarked] = useState(false)
   
   useEffect(()=> {
+    // Fetch movies when component mounts
     const fetchMovies = async () => {
       setLoading(true); 
       try {
         const coll = collection(db,'movies')
+        // Get count of movies
         const snapshot = await getCountFromServer(coll);
         setMovieCount(snapshot.data().count);
+        // Generate random index
         const randomIndex = Math.floor(Math.random() * snapshot.data().count);
         indexToSave.current = randomIndex;
+         // Get random movie
         const movieSnapshot = await getDocs(collection(db, 'movies'));
 
         const randomMovie = movieSnapshot.docs[randomIndex].data();
@@ -46,6 +51,7 @@ const HomeScreen = () => {
   const currentUser = auth.currentUser;
   const userId = currentUser ? currentUser.uid : null;
 
+  // Like button handler
   const handleLike = async () => {
     try {
       if (randomMovie && userId) {
@@ -59,12 +65,14 @@ const HomeScreen = () => {
     generateRandomMovie();
   };
 
+  // Dislike button handler
   const handleDislike = () => {
     setLoading(true);
     console.log("Movie disliked:", randomMovie.title);
     generateRandomMovie();
   };
 
+  // Animation for heart icon
   const animateHeart = () => {
     Animated.timing(heartOpacity, {
       toValue: 1,
@@ -79,6 +87,7 @@ const HomeScreen = () => {
     });
   };
 
+  // Animation for thumbs down icon
   const animateDislike = () => {
     Animated.timing(thumbsDownOpacity, {
       toValue: 1,
@@ -93,6 +102,7 @@ const HomeScreen = () => {
     });
   };
 
+  // Generate random movie
   const generateRandomMovie = async () => {
     try {
       setLoading(true);
@@ -120,11 +130,12 @@ const HomeScreen = () => {
     }
   };
   
-
+  // Navigate to movie details
   const goToMovieDetails = () => {
     navigation.navigate('MovieDetailsScreen', { movie : randomMovie });
   };
   
+  // Add movie to the bookmark
   const addToBookmarks = async () => {
     try {
       if (!isBookmarked && randomMovie && userId) {
@@ -137,7 +148,7 @@ const HomeScreen = () => {
     }
   };
   
-  
+  // save bookmarked movie
   const saveBookmarkedMovie = async (userId, movie) => {
     try {
       const userBookmarksRef = collection(db, 'likedBookmarks', userId, 'bookmarks');
