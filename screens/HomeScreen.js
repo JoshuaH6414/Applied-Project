@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Image, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
-import { collection, getDocs, getCountFromServer, doc, getDoc, addDoc } from 'firebase/firestore';
+import { collection, getDocs, getCountFromServer } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import saveLikedMovie from '../utils/saveLikedMovie'; 
 import saveBookmarkedMovie from '../utils/saveBookmarkedMovie';
@@ -34,7 +34,7 @@ const HomeScreen = () => {
         // Generate random index
         const randomIndex = Math.floor(Math.random() * snapshot.data().count);
         indexToSave.current = randomIndex;
-         // Get random movie
+        // Get random movie
         const movieSnapshot = await getDocs(collection(db, 'movies'));
 
         const randomMovie = movieSnapshot.docs[randomIndex].data();
@@ -72,36 +72,6 @@ const HomeScreen = () => {
     generateRandomMovie();
   };
 
-  // Animation for heart icon
-  const animateHeart = () => {
-    Animated.timing(heartOpacity, {
-      toValue: 1,
-      duration: 50,
-      useNativeDriver: true,
-    }).start(() => {
-      Animated.timing(heartOpacity, {
-        toValue: 0,
-        duration: 0,
-        useNativeDriver: true,
-      }).start();
-    });
-  };
-
-  // Animation for thumbs down icon
-  const animateDislike = () => {
-    Animated.timing(thumbsDownOpacity, {
-      toValue: 1,
-      duration: 50,
-      useNativeDriver: true,
-    }).start(() => {
-      Animated.timing(thumbsDownOpacity, {
-        toValue: 0,
-        duration: 0,
-        useNativeDriver: true,
-      }).start();
-    });
-  };
-
   // Generate random movie
   const generateRandomMovie = async () => {
     try {
@@ -119,17 +89,16 @@ const HomeScreen = () => {
   
         setMovieCount(totalCount);
         setRandomMovie(randomMovie);
-        setIsBookmarked(false); // Reset bookmark state
       } else {
         console.log('No movies found in the collection.');
       }
     } catch (error) {
       console.error('Error fetching movie:', error);
     } finally {
-      setLoading(false);
+      setLoading(false); 
     }
   };
-  
+
   // Navigate to movie details
   const goToMovieDetails = () => {
     navigation.navigate('MovieDetailsScreen', { movie : randomMovie });
@@ -138,26 +107,14 @@ const HomeScreen = () => {
   // Add movie to the bookmark
   const addToBookmarks = async () => {
     try {
-      if (!isBookmarked && randomMovie && userId) {
-        await saveBookmarkedMovie(userId, randomMovie);
-        console.log("Movie bookmarked", randomMovie.title);
-        setIsBookmarked(true); // Toggle bookmark state
-      }
+      await saveBookmarkedMovie(userId, randomMovie);
+      console.log("Movie bookmarked", randomMovie.title);
+      setIsBookmarked(true)
     } catch (error) {
       console.error("Error Bookmarking movie", error);
-    }
+    } finally {
+    } 
   };
-  
-  // save bookmarked movie
-  const saveBookmarkedMovie = async (userId, movie) => {
-    try {
-      const userBookmarksRef = collection(db, 'likedBookmarks', userId, 'bookmarks');
-      await addDoc(userBookmarksRef, movie);
-    } catch (error) {
-      console.error("Error saving bookmarked movie:", error);
-    }
-  };
-  
 
   return (
     <View style={styles.container}>
