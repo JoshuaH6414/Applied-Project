@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { auth } from '../firebaseConfig';
 
 const BookmarksScreen = () => {
   const [bookmarkedMovies, setBookmarkedMovies] = useState([]);
+  const [refreshing, setRefreshing] = useState(false); // State to manage refreshing
+
   const currentUser = auth.currentUser;
   const userId = currentUser ? currentUser.uid : null;
 
@@ -29,7 +31,13 @@ const BookmarksScreen = () => {
       console.error('Error fetching bookmarked movies:', error);
     }
   };
-  
+
+  // Function to handle pull-to-refresh action
+  const handleRefresh = () => {
+    setRefreshing(true); // Set refreshing state to true
+    fetchBookmarkedMovies(); // Fetch bookmarked movies again
+    setRefreshing(false); // Set refreshing state back to false after fetching is done
+  };
 
   useEffect(() => {
     fetchBookmarkedMovies();
@@ -47,14 +55,21 @@ const BookmarksScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Your Bookmarked Movies</Text>
-      {bookmarkedMovies.length > 0 ? (
-        <FlatList
-          data={bookmarkedMovies}
-          renderItem={renderMovieItem}
-          keyExtractor={(item, index) => index.toString()}
-          contentContainerStyle={styles.flatListContainer}
-        />
-      ) : (
+      <FlatList
+        data={bookmarkedMovies}
+        renderItem={renderMovieItem}
+        keyExtractor={(item, index) => index.toString()}
+        contentContainerStyle={styles.flatListContainer}
+        refreshControl={ // Refresh control to handle pull-to-refresh
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={['#003426']} // Android
+            tintColor="#003426" // iOS
+          />
+        }
+      />
+      {bookmarkedMovies.length === 0 && (
         <Text style={styles.emptyMessage}>No movies bookmarked yet.</Text>
       )}
     </View>
@@ -64,21 +79,19 @@ const BookmarksScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: '#003426',
-    paddingTop: 40, // Add padding top to move content down
+    paddingTop: 40,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 10,
     color: 'white',
-    marginTop: 20, // Adjust margin top to move the text down
+    marginTop: 20,
+    marginBottom: 10,
+    textAlign: 'center',
   },
   flatListContainer: {
-    alignItems: 'stretch',
-    paddingHorizontal: 20, // Add horizontal padding to the FlatList content
+    paddingHorizontal: 20,
   },
   movieItem: {
     backgroundColor: '#348833',
@@ -89,7 +102,7 @@ const styles = StyleSheet.create({
   movieTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#DEFFDE'
+    color: '#DEFFDE',
   },
   releaseDate: {
     fontSize: 14,
@@ -99,6 +112,7 @@ const styles = StyleSheet.create({
   emptyMessage: {
     fontSize: 18,
     color: '#777777',
+    textAlign: 'center',
   },
 });
 
