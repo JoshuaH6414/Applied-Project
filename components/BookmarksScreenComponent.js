@@ -46,8 +46,8 @@ const BookmarksScreen = () => {
   // Render function for each bookmarked movie item
   const renderMovieItem = ({ item }) => (
     <TouchableOpacity style={styles.movieItem}>
-      <Text style={styles.movieTitle}>{item.title}</Text>
-      <Text style={styles.releaseDate}>{item.releaseDate}</Text>
+      <Text style={styles.movieTitle}>{item.movieData.title}</Text>
+      <Text style={styles.releaseDate}>{item.movieData.releaseDate}</Text>
       {/* Add any additional movie details you want to display */}
     </TouchableOpacity>
   );
