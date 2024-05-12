@@ -3,6 +3,8 @@ import { View, Text, TextInput, Button, StyleSheet, Image } from 'react-native';
 import background from '../assets/background/bc2.jpg';
 
 const SignupScreen = ({ navigation }) => {
+
+  // State variables to manage form inputs and password match status
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -10,6 +12,7 @@ const SignupScreen = ({ navigation }) => {
 
   const handlePasswordChange = (text) => {
     setPassword(text);
+    // Check if entered password matches the confirmation password
     if (text === confirmPassword) {
       setPasswordsMatch(true);
     } else {
@@ -17,8 +20,10 @@ const SignupScreen = ({ navigation }) => {
     }
   };
 
+  // Function to handle confirmation password input change
   const handleConfirmPasswordChange = (text) => {
     setConfirmPassword(text);
+    // Check if entered confirmation password matches the password
     if (text === password) {
       setPasswordsMatch(true);
     } else {
@@ -26,19 +31,21 @@ const SignupScreen = ({ navigation }) => {
     }
   };
 
+   // Function to handle signup button press
   const handleSignup = () => {
-    navigation.navigate('Home');
+    navigation.navigate('Home');  // Navigate to Home screen
   };
 
   return (
     <View style={styles.container}>
       <Image 
         style={styles.image}
-        source={background}
+        source={background} // Background image
       />
       <View style={styles.overlay}>
         <View style={styles.formContainer}>
           <Text style={styles.title}>Sign Up</Text>
+          {/* Email input */}
           <TextInput
             style={styles.input}
             placeholder="Email"
@@ -47,23 +54,27 @@ const SignupScreen = ({ navigation }) => {
             autoCorrect={false}
             onChangeText={(text) => setEmail(text)}
           />
+          {/* Password input */}
           <TextInput
             style={styles.input}
             placeholder="Password"
             secureTextEntry
             onChangeText={handlePasswordChange}
           />
+           {/* Confirm password input */}
           <TextInput
             style={styles.input}
             placeholder="Confirm Password"
             secureTextEntry
             onChangeText={handleConfirmPasswordChange}
           />
+           {/* Signup button */}
           <Button
             title="Signup"
             onPress={handleSignup}
             disabled={!passwordsMatch || !email || !password}
           />
+           {/* Back to login button */}
           <Button
             title="Back to Login"
             onPress={() => navigation.goBack()}
@@ -75,6 +86,7 @@ const SignupScreen = ({ navigation }) => {
   );
 };
 
+// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,

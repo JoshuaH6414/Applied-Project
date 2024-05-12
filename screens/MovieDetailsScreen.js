@@ -57,6 +57,8 @@ const MovieDetailsScreen = ({ navigation, route }) => {
   );
 }
 
+
+// Add styles to the user interface components
 const styles = StyleSheet.create({
   container: {
     flex: 1,
