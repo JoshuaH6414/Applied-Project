@@ -39,7 +39,7 @@ const LoginScreen = ({ navigation }) => {
         // Save the user ID to AsyncStorage
         AsyncStorage.setItem('userId', userId);
         // Create a guest session for the user
-        createGuestSession();
+       //createGuestSession();
     })
     .catch((error) => {
         const errorCode = error.code;
